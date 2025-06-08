@@ -20,14 +20,19 @@ namespace SVirtualizingWrapPanel
                 _model.Index = i;
                 LargeScaleDataOC.Add(_model);
             }
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i <= 8; i++)
             {
                 Model _model = new Model();
                 _model.Color = new SolidColorBrush(Color.FromArgb(255, (byte)(i % 256), 100, 150));
                 _model.Index = i;
                 SmallScaleDataOC.Add(_model);
             }
+            SelectedItem = SmallScaleDataOC[5];
         }
+
+        [ObservableProperty]
+        Model _SelectedItem = new Model();
+
         [ObservableProperty]
         ObservableCollection<Model> _LargeScaleDataOC = new ObservableCollection<Model>();
 

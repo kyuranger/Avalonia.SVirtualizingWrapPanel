@@ -7,24 +7,44 @@
 		xmlns:Local="using:SVirtualizingWrapPanel"
 		x:DataType="Local:ViewModel"
         Title="SVirtualizingWrapPanel">
+	<Window.Styles>
+		<Style Selector="ListBox.Tag ListBoxItem ContentPresenter">
+			<Setter Property="Background" Value="#cecece"/>
+			<Setter Property="Padding" Value="0"></Setter>
+		</Style>
+		<Style Selector="ListBox.Tag ListBoxItem:pointerover ContentPresenter">
+			<Setter Property="Background" Value="#575757"/>
+		</Style>
+		<Style Selector="ListBox.Tag ListBoxItem:selected ContentPresenter">
+			<Setter Property="Background" Value="Red"/>
+		</Style>
+		<Style Selector="ListBox.Tag ListBoxItem">
+			<Setter Property="CornerRadius" Value="8"/>
+			<Setter Property="ClipToBounds" Value="True"/>
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="Cursor" Value="Hand"></Setter>
+			<Setter Property="Margin" Value="5"></Setter>
+		</Style>
+		<Style Selector="ListBox.Tag">
+			<Setter Property="Background" Value="Transparent"></Setter>
+		</Style>
+	</Window.Styles>
 	<TabControl Margin="5">
 		<TabItem Header="Small-scale data testing (for debugging)">
-			<ScrollViewer Width="684" Height="267">
-				<ItemsControl ItemsSource="{Binding SmallScaleDataOC}">
-					<ItemsControl.ItemsPanel>
+			<ListBox Classes="Tag" ItemsSource="{Binding SmallScaleDataOC}" Width="664" Height="267"  SelectedItem="{Binding SelectedItem}">
+					<ListBox.ItemsPanel>
 						<ItemsPanelTemplate>
 							<Local:SVirtualizingWrapPanel></Local:SVirtualizingWrapPanel>
 						</ItemsPanelTemplate>
-					</ItemsControl.ItemsPanel>
-					<ItemsControl.ItemTemplate>
+					</ListBox.ItemsPanel>
+					<ListBox.ItemTemplate>
 						<DataTemplate x:DataType="Local:Model">
-							<Border Width="314" Background="{Binding Color}" Height="142" Margin="5">
+							<Border Width="312" Background="{Binding Color}" Height="140" Margin="1">
 								<TextBlock TextAlignment="Center" TextWrapping="Wrap" Width="50" Text="{Binding Index}" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center"></TextBlock>
 							</Border>
 						</DataTemplate>
-					</ItemsControl.ItemTemplate>
-				</ItemsControl>
-			</ScrollViewer>
+					</ListBox.ItemTemplate>					
+				</ListBox>
 		</TabItem>
 		<TabItem Header="Large-scale data testing">
 			<ScrollViewer>
@@ -43,6 +63,6 @@
 					</ItemsControl.ItemTemplate>
 				</ItemsControl>
 			</ScrollViewer>
-		</TabItem>			
+		</TabItem>
 	</TabControl>
 </Window>

@@ -23,24 +23,8 @@ namespace SVirtualizingWrapPanel
 
         public SVirtualizingWrapPanel()
         {
-            this.EffectiveViewportChanged += VirtualizingWrapPanel_EffectiveViewportChanged;
-            this.SizeChanged += SVirtualizingWrapPanel_SizeChanged;
-        }
-
-        private void SVirtualizingWrapPanel_SizeChanged(object? sender, SizeChangedEventArgs e)
-        {
-            foreach (var i in _ElementDictionary)
-            {
-                if (i.Value.Control is { } && ItemContainerGenerator is { })
-                {
-                    RemoveInternalChild(i.Value.Control);
-                    ItemContainerGenerator.ClearItemContainer(i.Value.Control);
-                }
-            }
-            _ElementDictionary.Clear();
-            RenderElements(0);
-        }
-
+            this.EffectiveViewportChanged += VirtualizingWrapPanel_EffectiveViewportChanged;            
+        }        
         private void VirtualizingWrapPanel_EffectiveViewportChanged(object? sender, EffectiveViewportChangedEventArgs e)
         {
             //Debug.WriteLine(e.EffectiveViewport.Height);
@@ -49,7 +33,7 @@ namespace SVirtualizingWrapPanel
             {
                 return;
             }
-            if (e.EffectiveViewport.Top != _EffectiveViewport.Top)
+            if (e.EffectiveViewport.Top != _EffectiveViewport.Top||e.EffectiveViewport.Width!=_EffectiveViewport.Width||e.EffectiveViewport.Height!=_EffectiveViewport.Height)
             {
                 _EffectiveViewport = e.EffectiveViewport;
                 //Debug.WriteLine($"Top:{_EffectiveViewport.Top}");
@@ -81,11 +65,11 @@ namespace SVirtualizingWrapPanel
                         }
                     }
                 }
-                Debug.WriteLine("startIndex:" + _startIndex);
+                //Debug.WriteLine("startIndex:" + _startIndex);
                 #endregion
                 #region//正式渲染                               
                 var _lastIndex = RenderElements(_startIndex);
-                Debug.WriteLine("lastIndex:" + _lastIndex);
+                //Debug.WriteLine("lastIndex:" + _lastIndex);
                 #endregion
                 #region//回收其他元素
                 for (int i = 0; i < Items.Count; i++)
@@ -259,20 +243,14 @@ namespace SVirtualizingWrapPanel
         #region//计算是否Measure完成
         double _CurrentLineWidth = 0;
         double _CurrentLineHeight = 0;
-        int _SupplementaryLines = -1;
-        Boolean _IsNextLineMeasureFinish = false;
+        int _SupplementaryLines = -1;        
         Boolean IsMeasureFinished(Control control)
         {
             if (_CurrentLineWidth + control.DesiredSize.Width > this.Bounds.Width)//换行
-            {
-                if (_IsNextLineMeasureFinish)
-                {
-                    _IsNextLineMeasureFinish = false;
-                    return true;
-                }
+            {                
                 if (_CurrentLineHeight + control.DesiredSize.Height > _EffectiveViewport.Height + _EffectiveViewport.Top)
                 {
-                    _IsNextLineMeasureFinish = true;
+                    return true;
                 }
                 _CurrentLineHeight += control.DesiredSize.Height;
                 _CurrentLineWidth = control.DesiredSize.Width;
@@ -326,12 +304,6 @@ namespace SVirtualizingWrapPanel
         public event EventHandler<RoutedEventArgs> HorizontalSnapPointsChanged;
         public event EventHandler<RoutedEventArgs> VerticalSnapPointsChanged;
 
-
-        protected override void OnItemsControlChanged(ItemsControl? oldValue)
-        {
-            base.OnItemsControlChanged(oldValue);
-
-        }
         protected override void OnItemsChanged(IReadOnlyList<object?> items, NotifyCollectionChangedEventArgs e)
         {
             base.OnItemsChanged(items, e);
