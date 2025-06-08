@@ -9,3 +9,16 @@ Packaging this project as a NuGet package would enhance accessibility, but I lac
 This project is open-source and free to use. I welcome feedback, and if you're dissatisfied with the performance, code quality, or encounter bugs, feel free to fork the project and make your own improvements or optimizations.
 
 I hope this project proves useful to the community and supports your development needs.
+
+<hr>
+<h1>Avalonia.SVirtualizingWrapPanel 项目描述</h1>
+
+本项目提供了一个为 Avalonia UI 框架设计的自定义 VirtualizingWrapPanel，命名为 Avalonia.SVirtualizingWrapPanel。我了解到 Avalonia Accelerate 计划推出一个 VirtualizingWrapPanel，为了避免命名冲突，我将本项目的控件命名为 Avalonia.SVirtualizingWrapPanel。
+
+我并非专业程序员，编程只是我的兴趣和副业。我开发这个控件是因为我的个人项目需要使用 VirtualizingWrapPanel，但网上没有找到现成的实现。因此，我参考了 Avalonia 的 VirtualizingStackPanel，并根据自己的想法从头开发了 SVirtualizingWrapPanel，没有直接参考 WrapPanel 的代码。虽然该控件能够正常使用，但我自认其性能和代码质量无法与 Avalonia 官方团队的成果相比。如果您对性能或代码整洁度有较高要求，建议等待 Avalonia Accelerate 推出的官方 VirtualizingWrapPanel。
+
+将此项目打包为 NuGet 包会更方便大家使用，但我目前没有研究过如何操作。由于日常工作和生活繁忙，我的编程时间主要用于个人项目的开发，而这个控件只是其中一小部分，因此我无法投入更多时间进行维护。要使用该控件，只需将 SVirtualizingWrapPanel 类复制到您的项目中即可。由于时间和精力有限，控件中的 GetIrregularSnapPoints 和 GetRegularSnapPoints 方法尚未实现。如果我在个人项目中使用该控件时遇到问题或 BUG，我会继续维护和修复，但维护力度受限于我的时间。
+
+本项目是开源且免费的。如果您对项目的性能、代码整洁度或 BUG 有任何不满，欢迎 Fork 项目并进行修改和优化。
+
+希望这个项目能为社区提供帮助，满足您的开发需求。
