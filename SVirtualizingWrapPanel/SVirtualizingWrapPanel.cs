@@ -82,8 +82,7 @@ namespace SVirtualizingWrapPanel
                             {
                                 RemoveInternalChild(_element.Control);
                                 ItemContainerGenerator.ClearItemContainer(_element.Control);
-                                _element.Control = null;
-                                //_element.IsRendered = false;                             
+                                _element.Control = null;                                
                             }
                         }
                     }
@@ -337,10 +336,11 @@ namespace SVirtualizingWrapPanel
                 }
             }
             else if (this.GetVisualRoot() is ILayoutRoot root)
-            {
+            {                
                 RenderElements(index);
                 if (_ElementDictionary[index].Control is Control _element)
                 {
+                    _element.UpdateLayout();
                     _element.BringIntoView();
                     return _element;
                 }

@@ -27,7 +27,7 @@ namespace SVirtualizingWrapPanel
                 _model.Index = i;
                 SmallScaleDataOC.Add(_model);
             }
-            SelectedItem = SmallScaleDataOC[5];
+            SelectedItem = SmallScaleDataOC[7];
         }
 
         [ObservableProperty]
