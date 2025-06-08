@@ -1,4 +1,4 @@
-Avalonia.SVirtualizingWrapPanel Project Description
+<h1>Avalonia.SVirtualizingWrapPanel Project Description</h1>
 
 This project introduces Avalonia.SVirtualizingWrapPanel, a custom VirtualizingWrapPanel designed for the Avalonia UI framework. Initially, I learned that the Avalonia Accelerate initiative planned to release a VirtualizingWrapPanel. To avoid naming conflicts, I named this implementation Avalonia.SVirtualizingWrapPanel.
 
