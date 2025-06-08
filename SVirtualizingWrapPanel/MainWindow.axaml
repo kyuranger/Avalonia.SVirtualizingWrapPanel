@@ -1,0 +1,48 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="SVirtualizingWrapPanel.MainWindow"
+		xmlns:Local="using:SVirtualizingWrapPanel"
+		x:DataType="Local:ViewModel"
+        Title="SVirtualizingWrapPanel">
+	<TabControl Margin="5">
+		<TabItem Header="Small-scale data testing (for debugging)">
+			<ScrollViewer Width="684" Height="267">
+				<ItemsControl ItemsSource="{Binding SmallScaleDataOC}">
+					<ItemsControl.ItemsPanel>
+						<ItemsPanelTemplate>
+							<Local:SVirtualizingWrapPanel></Local:SVirtualizingWrapPanel>
+						</ItemsPanelTemplate>
+					</ItemsControl.ItemsPanel>
+					<ItemsControl.ItemTemplate>
+						<DataTemplate x:DataType="Local:Model">
+							<Border Width="314" Background="{Binding Color}" Height="142" Margin="5">
+								<TextBlock TextAlignment="Center" TextWrapping="Wrap" Width="50" Text="{Binding Index}" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center"></TextBlock>
+							</Border>
+						</DataTemplate>
+					</ItemsControl.ItemTemplate>
+				</ItemsControl>
+			</ScrollViewer>
+		</TabItem>
+		<TabItem Header="Large-scale data testing">
+			<ScrollViewer>
+				<ItemsControl ItemsSource="{Binding LargeScaleDataOC}">
+					<ItemsControl.ItemsPanel>
+						<ItemsPanelTemplate>
+							<Local:SVirtualizingWrapPanel></Local:SVirtualizingWrapPanel>
+						</ItemsPanelTemplate>
+					</ItemsControl.ItemsPanel>
+					<ItemsControl.ItemTemplate>
+						<DataTemplate x:DataType="Local:Model">
+							<Border Width="100" Background="{Binding Color}" Height="100">
+								<TextBlock TextAlignment="Center" TextWrapping="Wrap" Width="50" Text="{Binding Index}" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center"></TextBlock>
+							</Border>
+						</DataTemplate>
+					</ItemsControl.ItemTemplate>
+				</ItemsControl>
+			</ScrollViewer>
+		</TabItem>			
+	</TabControl>
+</Window>
