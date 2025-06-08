@@ -1,26 +1,58 @@
 <h1>Avalonia.SVirtualizingWrapPanel Project Description</h1>
 
-This project introduces Avalonia.SVirtualizingWrapPanel, a custom VirtualizingWrapPanel designed for the Avalonia UI framework. Initially, I learned that the Avalonia Accelerate initiative planned to release a VirtualizingWrapPanel. To avoid naming conflicts, I named this implementation Avalonia.SVirtualizingWrapPanel.
+<h2>Project Introduction</h2>
+This project develops a custom virtualizing layout control for the Avalonia UI framework, named Avalonia.SVirtualizingWrapPanel. It should be noted that, due to the upcoming official VirtualizingWrapPanel from the Avalonia Accelerate program, the prefix "SVirtualizingWrapPanel" is used to avoid naming conflicts.
 
-As a hobbyist programmer, coding is not my primary profession but a passionate side pursuit. I developed this control because I needed a VirtualizingWrapPanel for my personal project and found no existing implementations online. Inspired by Avalonia's VirtualizingStackPanel, I built SVirtualizingWrapPanel from scratch based on my own ideas, without referencing the WrapPanel codebase. While functional, I acknowledge that my implementation may not match the performance or polish of the Avalonia team's official work. For those prioritizing top-tier performance and code quality, I recommend waiting for the official VirtualizingWrapPanel from Avalonia Accelerate.
+<h2>Development Background</h2>
+As an amateur programming enthusiast, I developed this control to meet the needs of a virtualizing wrap layout in my personal projects. In the absence of existing solutions, I implemented this layout logic independently based on the design ideas of Avalonia's VirtualizingStackPanel (without directly referencing the WrapPanel source code). It should be emphasized:
+<ul>
+<li>While the control operates stably, there are inevitable gaps in performance optimization and code quality compared to implementations by professional teams.</li>
+<li>If your project has strict performance requirements, it is recommended to wait for the official VirtualizingWrapPanel release.</li>
+</ul>
 
-Packaging this project as a NuGet package would enhance accessibility, but I lack the experience to do so. My time is limited due to a busy work and personal life, with most of my coding efforts focused on my personal projects, of which this control is just a small component. As a result, I haven't implemented certain features, such as GetIrregularSnapPoints and GetRegularSnapPoints, due to time and energy constraints. To use this control, simply copy the SVirtualizingWrapPanel class into your project. I will continue to maintain and fix bugs in this control as I encounter them in my own projects, but my capacity for extensive maintenance is limited.
+<h2>Usage Instructions</h2>
+Currently, the project provides a source-code-level integration solution (simply copy the SVirtualizingWrapPanel class into your project to use it), and no NuGet package has been released yet. Please note:
+<ul>
+<li>The GetIrregularSnapPoints and GetRegularSnapPoints methods are not yet implemented.</li>
+<li>Maintenance and updates will be driven by the actual needs of my personal projects.</li>
+</ul>
 
-This project is open-source and free to use. I welcome feedback, and if you're dissatisfied with the performance, code quality, or encounter bugs, feel free to fork the project and make your own improvements or optimizations.For various reasons, I apologize for not being able to contribute more time and effort to this project.
+<h2>Open Source Statement</h2>
+This project is fully open source under the MIT license, and we welcome:
+<ul>
+<li>Secondary development and optimization through forking.</li>
+<li>Submitting issues to report problems.</li>
+</ul>
 
-I hope this project proves useful to the community and supports your development needs.
+Due to limited personal time and energy, I cannot provide professional-level maintenance support, but I promise to continuously fix significant issues discovered during my own use. I hope this project can serve as a temporary solution for community developers, and I appreciate your understanding and support.
 
 Demonstration effect：
 <img src="https://private-user-images.githubusercontent.com/30720036/378710908-840a6e62-488d-440d-80e6-ed3c901707d8.gif?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDkzNzEzNzcsIm5iZiI6MTc0OTM3MTA3NywicGF0aCI6Ii8zMDcyMDAzNi8zNzg3MTA5MDgtODQwYTZlNjItNDg4ZC00NDBkLTgwZTYtZWQzYzkwMTcwN2Q4LmdpZj9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA2MDglMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwNjA4VDA4MjQzN1omWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWQyNjFlMDQxMzc4ZTgyNGZmYjNlNmI5MWU5NWI3N2RjODk3ZjRiOTk2NDg5YTNlOWU3NWJiMmJkNzQyMWE2MzEmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.hLs7E7Xx-vy83FNp6Nb-6q50RRfKDxO3ve-3FgaIXE0"></img>
 <hr>
 <h1>Avalonia.SVirtualizingWrapPanel 项目描述</h1>
 
-本项目提供了一个为 Avalonia UI 框架设计的自定义 VirtualizingWrapPanel，命名为 Avalonia.SVirtualizingWrapPanel。我了解到 Avalonia Accelerate 计划推出一个 VirtualizingWrapPanel，为了避免命名冲突，我将本项目的控件命名为 Avalonia.SVirtualizingWrapPanel。
+<h2>项目介绍</h2>
+本项目为 Avalonia UI 框架开发了一款自定义虚拟化布局控件，命名为 Avalonia.SVirtualizingWrapPanel。需要说明的是，由于 Avalonia Accelerate 计划未来推出官方的 VirtualizingWrapPanel，为避免命名冲突，特此采用 "SVirtualizingWrapPanel" 作为前缀标识。
 
-我并非专业程序员，编程只是我的兴趣和副业。我开发这个控件是因为我的个人项目需要使用 VirtualizingWrapPanel，但网上没有找到现成的实现。因此，我参考了 Avalonia 的 VirtualizingStackPanel，并根据自己的想法从头开发了 SVirtualizingWrapPanel，没有直接参考 WrapPanel 的代码。虽然该控件能够正常使用，但我自认其性能和代码质量无法与 Avalonia 官方团队的成果相比。如果您对性能或代码整洁度有较高要求，建议等待 Avalonia Accelerate 推出的官方 VirtualizingWrapPanel。
+<h2>开发背景</h2>
+作为一名业余编程爱好者，我开发此控件的初衷是为了满足个人项目中虚拟化换行布局的需求。在未找到现有实现方案的情况下，我基于 Avalonia 的 VirtualizingStackPanel 设计思路，独立实现了这套布局逻辑（未直接参考 WrapPanel 源码）。需要特别说明：
+<ul>
+<li>该控件虽能稳定运行，但在性能优化和代码质量方面与专业团队的实现必然存在差距</li>
+<li>若您的项目对性能有严格要求，建议等待官方 VirtualizingWrapPanel 的发布</li>
+</ul>
 
-将此项目打包为 NuGet 包会更方便大家使用，但我目前没有研究过如何操作。由于日常工作和生活繁忙，我的编程时间主要用于个人项目的开发，而这个控件只是其中一小部分，因此我无法投入更多时间进行维护。要使用该控件，只需将 SVirtualizingWrapPanel 类复制到您的项目中即可。由于时间和精力有限，控件中的 GetIrregularSnapPoints 和 GetRegularSnapPoints 方法尚未实现。如果我在个人项目中使用该控件时遇到问题或 BUG，我会继续维护和修复，但维护力度受限于我的时间。
+<h2>使用说明</h2>
+当前提供源码级集成方案（直接复制 SVirtualizingWrapPanel 类到项目即可使用），暂未发布 NuGet 包。需注意：
+<ul>
+<li>GetIrregularSnapPoints 和 GetRegularSnapPoints 方法暂未实现</li>
+<li>维护更新将基于个人项目中的实际使用需求进行</li>
+</ul>
 
-本项目是开源且免费的。如果您对项目的性能、代码整洁度或 BUG 有任何不满，欢迎 Fork 项目并进行修改和优化。由于诸多原因，抱歉我无法为本项目投入更多精力与贡献。
+<h2>开源声明</h2>
+本项目采用 MIT 协议完全开源，欢迎：
+<ul>
+<li>通过 Fork 进行二次开发与优化</li>
+<li>提交 Issue 反馈问题</li>
+</ul>
 
-希望这个项目能为社区提供帮助，满足您的开发需求。
+受限于个人时间精力，我无法提供专业级的维护支持，但承诺会持续修复个人使用过程中发现的重大问题。期待这个项目能为社区开发者提供临时解决方案，也感谢您的理解与支持。
