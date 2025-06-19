@@ -21,19 +21,45 @@ namespace SVirtualizingWrapPanel
         public bool AreHorizontalSnapPointsRegular { get; set; }
         public bool AreVerticalSnapPointsRegular { get; set; }
 
+        public bool HasMoreItems { get; set; } = true;
+        public bool IsLoadingMore { get; private set; } = false;
+        public EventHandler? LoadMoreRequested;
+
+        private void LoadMoreAsync()
+        {
+            if (IsLoadingMore || !HasMoreItems)
+                return;
+
+            IsLoadingMore = true;
+            try
+            {
+                if (LoadMoreRequested != null)
+                    LoadMoreRequested?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                // 可以加日志记录
+            }
+            finally
+            {
+                IsLoadingMore = false;
+            }
+        }
         public SVirtualizingWrapPanel()
         {
-            this.EffectiveViewportChanged += VirtualizingWrapPanel_EffectiveViewportChanged;            
-        }        
+            this.EffectiveViewportChanged += VirtualizingWrapPanel_EffectiveViewportChanged;
+        }
+
+        int _CurrentIndex = 0;
         private void VirtualizingWrapPanel_EffectiveViewportChanged(object? sender, EffectiveViewportChangedEventArgs e)
         {
             //Debug.WriteLine(e.EffectiveViewport.Height);
-            //Debug.WriteLine(e.EffectiveViewport.Top);
+            //Debug.WriteLine(e.EffectiveViewport.Top);            
             if (e.EffectiveViewport.Top == -1)
             {
                 return;
             }
-            if (e.EffectiveViewport.Top != _EffectiveViewport.Top||e.EffectiveViewport.Width!=_EffectiveViewport.Width||e.EffectiveViewport.Height!=_EffectiveViewport.Height)
+            if (e.EffectiveViewport.Top != _EffectiveViewport.Top || e.EffectiveViewport.Width != _EffectiveViewport.Width || e.EffectiveViewport.Height != _EffectiveViewport.Height)
             {
                 _EffectiveViewport = e.EffectiveViewport;
                 //Debug.WriteLine($"Top:{_EffectiveViewport.Top}");
@@ -65,6 +91,7 @@ namespace SVirtualizingWrapPanel
                         }
                     }
                 }
+                _CurrentIndex = _startIndex;
                 //Debug.WriteLine("startIndex:" + _startIndex);
                 #endregion
                 #region//正式渲染                               
@@ -82,7 +109,8 @@ namespace SVirtualizingWrapPanel
                             {
                                 RemoveInternalChild(_element.Control);
                                 ItemContainerGenerator.ClearItemContainer(_element.Control);
-                                _element.Control = null;                                
+                                _element.Control = null;
+                                //_element.IsRendered = false;                             
                             }
                         }
                     }
@@ -90,6 +118,11 @@ namespace SVirtualizingWrapPanel
                 #endregion
                 InvalidateMeasure();
                 InvalidateArrange();
+
+                if (_EffectiveViewport.Top + _EffectiveViewport.Height >= _PanelSize.Height - 200)
+                {
+                    LoadMoreAsync(); // fire and forget
+                }
             }
             else
             {
@@ -242,11 +275,11 @@ namespace SVirtualizingWrapPanel
         #region//计算是否Measure完成
         double _CurrentLineWidth = 0;
         double _CurrentLineHeight = 0;
-        int _SupplementaryLines = -1;        
+        int _SupplementaryLines = -1;
         Boolean IsMeasureFinished(Control control)
         {
             if (_CurrentLineWidth + control.DesiredSize.Width > this.Bounds.Width)//换行
-            {                
+            {
                 if (_CurrentLineHeight + control.DesiredSize.Height > _EffectiveViewport.Height + _EffectiveViewport.Top)
                 {
                     return true;
@@ -306,16 +339,7 @@ namespace SVirtualizingWrapPanel
         protected override void OnItemsChanged(IReadOnlyList<object?> items, NotifyCollectionChangedEventArgs e)
         {
             base.OnItemsChanged(items, e);
-            foreach (var i in _ElementDictionary)
-            {
-                if (i.Value.Control is { } && ItemContainerGenerator is { })
-                {
-                    RemoveInternalChild(i.Value.Control);
-                    ItemContainerGenerator.ClearItemContainer(i.Value.Control);
-                }
-            }
-            _ElementDictionary.Clear();
-            RenderElements(0);
+            RenderElements(_CurrentIndex);
         }
 
 
@@ -327,6 +351,15 @@ namespace SVirtualizingWrapPanel
             if (index < 0 || index >= _items.Count || !IsEffectivelyVisible)
                 return null;
 
+            if (!_ElementDictionary.ContainsKey(index))
+            {
+                if (HasMoreItems)
+                {
+                    LoadMoreAsync();
+                }
+                return null;
+            }
+
             if (index < _ElementDictionary.Count && _ElementDictionary[index].IsRendered)
             {
                 if (_ElementDictionary[index].Control is Control _element)
@@ -336,7 +369,7 @@ namespace SVirtualizingWrapPanel
                 }
             }
             else if (this.GetVisualRoot() is ILayoutRoot root)
-            {                
+            {
                 RenderElements(index);
                 if (_ElementDictionary[index].Control is Control _element)
                 {
