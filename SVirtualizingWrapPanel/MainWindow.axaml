@@ -30,7 +30,7 @@
 		</Style>
 	</Window.Styles>
 	<TabControl Margin="5">
-		<TabItem Header="Small-scale data testing (for debugging)">
+		<TabItem Header="Small-scale data testing(SVirtualizingWrapPanel)">
 			<ListBox Classes="Tag" ItemsSource="{Binding SmallScaleDataOC}" Width="664" Height="267"  SelectedItem="{Binding SelectedItem}">
 					<ListBox.ItemsPanel>
 						<ItemsPanelTemplate>
@@ -46,7 +46,7 @@
 					</ListBox.ItemTemplate>					
 				</ListBox>
 		</TabItem>
-		<TabItem Header="Large-scale data testing">
+		<TabItem Header="Large-scale data testing(SVirtualizingWrapPanel)">
 			<ScrollViewer>
 				<ItemsControl ItemsSource="{Binding LargeScaleDataOC}">
 					<ItemsControl.ItemsPanel>
@@ -57,6 +57,24 @@
 					<ItemsControl.ItemTemplate>
 						<DataTemplate x:DataType="Local:Model">
 							<Border Width="100" Background="{Binding Color}" Height="100">
+								<TextBlock TextAlignment="Center" TextWrapping="Wrap" Width="50" Text="{Binding Index}" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center"></TextBlock>
+							</Border>
+						</DataTemplate>
+					</ItemsControl.ItemTemplate>
+				</ItemsControl>
+			</ScrollViewer>
+		</TabItem>
+		<TabItem Header="Large-scale data testing(SVirtualizingStackPanel)">
+			<ScrollViewer>
+				<ItemsControl ItemsSource="{Binding LargeScaleDataOC}">
+					<ItemsControl.ItemsPanel>
+						<ItemsPanelTemplate>
+							<Local:SVirtualizingStackPanel></Local:SVirtualizingStackPanel>
+						</ItemsPanelTemplate>
+					</ItemsControl.ItemsPanel>
+					<ItemsControl.ItemTemplate>
+						<DataTemplate x:DataType="Local:Model">
+							<Border Background="{Binding Color}">
 								<TextBlock TextAlignment="Center" TextWrapping="Wrap" Width="50" Text="{Binding Index}" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center"></TextBlock>
 							</Border>
 						</DataTemplate>

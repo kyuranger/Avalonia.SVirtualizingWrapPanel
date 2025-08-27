@@ -312,7 +312,7 @@ namespace SVirtualizingWrapPanel
             return finalSize;
         }
 
-        protected override async void OnItemsChanged(IReadOnlyList<object?> items, NotifyCollectionChangedEventArgs e)
+        protected override void OnItemsChanged(IReadOnlyList<object?> items, NotifyCollectionChangedEventArgs e)
         {
             base.OnItemsChanged(items, e);
             RenderElements(_CurrentIndex);
