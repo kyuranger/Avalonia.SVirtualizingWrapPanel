@@ -314,6 +314,8 @@ namespace SVirtualizingWrapPanel
 
         protected override void OnItemsChanged(IReadOnlyList<object?> items, NotifyCollectionChangedEventArgs e)
         {
+            RemoveInternalChildRange(0, VisualChildren.Count);
+            _ElementDictionary.Clear();
             base.OnItemsChanged(items, e);
             RenderElements(_CurrentIndex);
             if (!IsLoadingMore && !IsPauseLoadMoreRequested)

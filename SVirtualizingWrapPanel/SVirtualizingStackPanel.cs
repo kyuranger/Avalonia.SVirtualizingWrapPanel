@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace SVirtualizingWrapPanel
 {
-    public sealed class SVirtualizingStackPanel: SVirtualizingPanel
+    public sealed class SVirtualizingStackPanel : SVirtualizingPanel
     {
 
         public static readonly StyledProperty<Orientation> OrientationProperty =
@@ -84,7 +84,7 @@ namespace SVirtualizingWrapPanel
                             }
                         }
                     }
-                    Debug.WriteLine("firstIndex:" + _firstIndex);
+                    //Debug.WriteLine("firstIndex:" + _firstIndex);
                     #endregion
                     EffectiveViewportChangedRender(_firstIndex);
                 }
@@ -116,7 +116,7 @@ namespace SVirtualizingWrapPanel
                             }
                         }
                     }
-                    Debug.WriteLine("firstIndex:" + _firstIndex);
+                    //Debug.WriteLine("firstIndex:" + _firstIndex);
                     #endregion
                     EffectiveViewportChangedRender(_firstIndex);
                 }
@@ -139,11 +139,11 @@ namespace SVirtualizingWrapPanel
                 }
             }
             _CurrentIndex = _startIndex;
-            Debug.WriteLine("startIndex:" + _startIndex);
+            //Debug.WriteLine("startIndex:" + _startIndex);
             #endregion
             #region//正式渲染                               
             var _lastIndex = RenderElements(_startIndex);
-            Debug.WriteLine("lastIndex:" + _lastIndex);
+            //Debug.WriteLine("lastIndex:" + _lastIndex);
             #endregion
             #region//回收其他元素
             for (int i = 0; i < Items.Count; i++)
@@ -327,7 +327,7 @@ namespace SVirtualizingWrapPanel
                         if (_element.IsRendered)
                         {
                             _element.Height = _EffectiveViewport.Height;
-                            _element.Width = _element.Width; 
+                            _element.Width = _element.Width;
                             _element.Top = 0;
                             _element.Left = _CurrentLineWidth;
                             _CurrentLineWidth += _element.Width;
@@ -350,8 +350,8 @@ namespace SVirtualizingWrapPanel
                 #endregion
                 _PanelSize = new Size(_CurrentLineWidth, _EffectiveViewport.Height);
             }
-                #region//正式Measure自身
-                InvalidateMeasure();
+            #region//正式Measure自身
+            InvalidateMeasure();
             #endregion
             #region//正式Arrange自身
             InvalidateArrange();
@@ -367,7 +367,7 @@ namespace SVirtualizingWrapPanel
                 {
                     return true;
                 }
-                _CurrentLineHeight += control.DesiredSize.Height;                
+                _CurrentLineHeight += control.DesiredSize.Height;
                 return false;
             }
             else
@@ -376,7 +376,7 @@ namespace SVirtualizingWrapPanel
                 {
                     return true;
                 }
-                _CurrentLineWidth += control.DesiredSize.Width;                
+                _CurrentLineWidth += control.DesiredSize.Width;
                 return false;
             }
         }
@@ -407,6 +407,8 @@ namespace SVirtualizingWrapPanel
 
         protected override void OnItemsChanged(IReadOnlyList<object?> items, NotifyCollectionChangedEventArgs e)
         {
+            RemoveInternalChildRange(0, VisualChildren.Count);
+            _ElementDictionary.Clear();
             base.OnItemsChanged(items, e);
             RenderElements(_CurrentIndex);
             if (!IsLoadingMore && !IsPauseLoadMoreRequested)
