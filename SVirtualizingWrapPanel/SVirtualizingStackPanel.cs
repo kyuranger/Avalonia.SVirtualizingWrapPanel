@@ -142,13 +142,13 @@ namespace SVirtualizingWrapPanel
             //Debug.WriteLine("startIndex:" + _startIndex);
             #endregion
             #region//正式渲染                               
-            var _lastIndex = RenderElements(_startIndex);
+            _LastIndex = RenderElements(_startIndex);
             //Debug.WriteLine("lastIndex:" + _lastIndex);
             #endregion
             #region//回收其他元素
             for (int i = 0; i < Items.Count; i++)
             {
-                if (i < _startIndex || i > _lastIndex)
+                if (i < _startIndex || i > _LastIndex)
                 {
                     if (_ElementDictionary.TryGetValue(i, out var _element))
                     {
@@ -407,8 +407,85 @@ namespace SVirtualizingWrapPanel
 
         protected override void OnItemsChanged(IReadOnlyList<object?> items, NotifyCollectionChangedEventArgs e)
         {
-            RemoveInternalChildRange(0, VisualChildren.Count);
-            _ElementDictionary.Clear();
+            switch (e.Action)
+            {
+                case NotifyCollectionChangedAction.Add:
+                    {
+                        var _newIndex = e.NewStartingIndex;
+                        if (_newIndex <= _LastIndex)
+                        {
+                            var _clearStartIndex = Math.Min(_newIndex, _CurrentIndex);
+                            for (int i = _clearStartIndex; i < Items.Count; i++)
+                            {
+                                if (_ElementDictionary.ContainsKey(i))
+                                {
+                                    _ElementDictionary.Remove(i);
+                                }
+                            }
+                            var _removeStartIndex = _newIndex - _CurrentIndex;
+                            if (_removeStartIndex >= 0)
+                            {
+                                RemoveInternalChildRange(_removeStartIndex, VisualChildren.Count - _removeStartIndex);
+                            }
+                            else
+                            {
+                                RemoveInternalChildRange(0, VisualChildren.Count);
+                            }
+                        }
+                        else
+                        {
+                            for (int i = _LastIndex; i < Items.Count; i++)
+                            {
+                                if (_ElementDictionary.ContainsKey(i))
+                                {
+                                    _ElementDictionary.Remove(i);
+                                }
+                            }
+                        }
+                        break;
+                    }
+                case NotifyCollectionChangedAction.Remove:
+                    {
+                        var _oldIndex = e.OldStartingIndex;
+                        if (_oldIndex <= _LastIndex)
+                        {
+                            var _clearStartIndex = Math.Min(_oldIndex, _CurrentIndex);
+                            for (int i = _clearStartIndex; i < Items.Count; i++)
+                            {
+                                if (_ElementDictionary.ContainsKey(i))
+                                {
+                                    _ElementDictionary.Remove(i);
+                                }
+                            }
+                            var _removeStartIndex = _oldIndex - _CurrentIndex;
+                            if (_removeStartIndex >= 0)
+                            {
+                                RemoveInternalChildRange(_removeStartIndex, VisualChildren.Count - _removeStartIndex);
+                            }
+                            else
+                            {
+                                RemoveInternalChildRange(0, VisualChildren.Count);
+                            }
+                        }
+                        else
+                        {
+                            for (int i = _LastIndex; i < Items.Count; i++)
+                            {
+                                if (_ElementDictionary.ContainsKey(i))
+                                {
+                                    _ElementDictionary.Remove(i);
+                                }
+                            }
+                        }
+                        break;
+                    }
+                case NotifyCollectionChangedAction.Reset:
+                    {
+                        _ElementDictionary.Clear();
+                        RemoveInternalChildRange(0, VisualChildren.Count);
+                        break;
+                    }
+            }
             base.OnItemsChanged(items, e);
             RenderElements(_CurrentIndex);
             if (!IsLoadingMore && !IsPauseLoadMoreRequested)

@@ -8,6 +8,7 @@ namespace SVirtualizingWrapPanel
         {
             InitializeComponent();
             this.DataContext = new ViewModel();
+            
         }
     }
 }

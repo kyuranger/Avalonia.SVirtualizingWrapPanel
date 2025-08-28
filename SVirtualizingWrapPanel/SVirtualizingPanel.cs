@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,6 +30,7 @@ namespace SVirtualizingWrapPanel
 
         public abstract Boolean IsPauseLoadMoreRequested { get; set; }
         protected int _CurrentIndex = 0;
+        protected int _LastIndex = 0;     
         protected void LoadMore()
         {
             if (IsLoadingMore || !HasMoreItems)
