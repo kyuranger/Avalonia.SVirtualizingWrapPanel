@@ -411,78 +411,71 @@ namespace SVirtualizingWrapPanel
             {
                 case NotifyCollectionChangedAction.Add:
                     {
-                        var _newIndex = e.NewStartingIndex;
-                        if (_newIndex <= _LastIndex)
+                        int _clearStartIndex = 0;
+                        if (e.NewStartingIndex < _LastIndex)
                         {
-                            var _clearStartIndex = Math.Min(_newIndex, _CurrentIndex);
-                            for (int i = _clearStartIndex; i < Items.Count; i++)
-                            {
-                                if (_ElementDictionary.ContainsKey(i))
-                                {
-                                    _ElementDictionary.Remove(i);
-                                }
-                            }
-                            var _removeStartIndex = _newIndex - _CurrentIndex;
-                            if (_removeStartIndex >= 0)
-                            {
-                                RemoveInternalChildRange(_removeStartIndex, VisualChildren.Count - _removeStartIndex);
-                            }
-                            else
-                            {
-                                RemoveInternalChildRange(0, VisualChildren.Count);
-                            }
+                            _clearStartIndex = Math.Min(e.NewStartingIndex, _CurrentIndex);
                         }
                         else
                         {
-                            for (int i = _LastIndex; i < Items.Count; i++)
+                            _clearStartIndex = _LastIndex;
+                        }
+                        for (int i = _clearStartIndex; i < Items.Count; i++)
+                        {
+                            if (_ElementDictionary.TryGetValue(i, out var _element))
                             {
-                                if (_ElementDictionary.ContainsKey(i))
+                                if (_element.Control is { })
                                 {
+                                    RemoveInternalChild(_element.Control);
+                                    ItemContainerGenerator?.ClearItemContainer(_element.Control);
                                     _ElementDictionary.Remove(i);
                                 }
                             }
+
                         }
                         break;
                     }
                 case NotifyCollectionChangedAction.Remove:
                     {
-                        var _oldIndex = e.OldStartingIndex;
-                        if (_oldIndex <= _LastIndex)
+                        int _clearStartIndex = 0;
+                        if (e.OldStartingIndex < _LastIndex)
                         {
-                            var _clearStartIndex = Math.Min(_oldIndex, _CurrentIndex);
-                            for (int i = _clearStartIndex; i < Items.Count; i++)
-                            {
-                                if (_ElementDictionary.ContainsKey(i))
-                                {
-                                    _ElementDictionary.Remove(i);
-                                }
-                            }
-                            var _removeStartIndex = _oldIndex - _CurrentIndex;
-                            if (_removeStartIndex >= 0)
-                            {
-                                RemoveInternalChildRange(_removeStartIndex, VisualChildren.Count - _removeStartIndex);
-                            }
-                            else
-                            {
-                                RemoveInternalChildRange(0, VisualChildren.Count);
-                            }
+                            _clearStartIndex = Math.Min(e.NewStartingIndex, _CurrentIndex);
                         }
                         else
                         {
-                            for (int i = _LastIndex; i < Items.Count; i++)
+                            _clearStartIndex = _LastIndex;
+                        }
+                        for (int i = _clearStartIndex; i < Items.Count; i++)
+                        {
+                            if (_ElementDictionary.TryGetValue(i, out var _element))
                             {
-                                if (_ElementDictionary.ContainsKey(i))
+                                if (_element.Control is { })
                                 {
+                                    RemoveInternalChild(_element.Control);
+                                    ItemContainerGenerator?.ClearItemContainer(_element.Control);
                                     _ElementDictionary.Remove(i);
                                 }
                             }
+
                         }
                         break;
                     }
                 case NotifyCollectionChangedAction.Reset:
                     {
-                        _ElementDictionary.Clear();
-                        RemoveInternalChildRange(0, VisualChildren.Count);
+                        for (int i = 0; i < Items.Count; i++)
+                        {
+                            if (_ElementDictionary.TryGetValue(i, out var _element))
+                            {
+                                if (_element.Control is { })
+                                {
+                                    RemoveInternalChild(_element.Control);
+                                    ItemContainerGenerator?.ClearItemContainer(_element.Control);
+                                    _ElementDictionary.Remove(i);
+                                }
+                            }
+
+                        }
                         break;
                     }
             }

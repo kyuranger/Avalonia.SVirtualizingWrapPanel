@@ -1,4 +1,8 @@
 using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Threading;
+using System;
+using System.Threading.Tasks;
 
 namespace SVirtualizingWrapPanel
 {
@@ -6,9 +10,9 @@ namespace SVirtualizingWrapPanel
     {
         public MainWindow()
         {
+            ViewModel _vm = new ViewModel();
             InitializeComponent();
-            this.DataContext = new ViewModel();
-            
+            this.DataContext = _vm;           
         }
     }
 }
