@@ -1,5 +1,7 @@
-﻿using Avalonia.Media;
+﻿using Avalonia.Collections;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -18,25 +20,47 @@ namespace SVirtualizingWrapPanel
                 Model _model = new Model();
                 _model.Color = new SolidColorBrush(Color.FromArgb(255, (byte)(i % 256), 100, 150));
                 _model.Index = i;
-                LargeScaleDataOC.Add(_model);
+                LargeScaleDataAvaloniaList.Add(_model);
             }
             for (int i = 0; i <= 8; i++)
             {
                 Model _model = new Model();
                 _model.Color = new SolidColorBrush(Color.FromArgb(255, (byte)(i % 256), 100, 150));
                 _model.Index = i;
-                SmallScaleDataOC.Add(_model);
+                SmallScaleDataAvaloniaList.Add(_model);
             }
-            SelectedItem = SmallScaleDataOC[7];
+            SelectedItem = SmallScaleDataAvaloniaList[7];
+
+
+
+            List<Model> _waterfallCache = new List<Model>();
+            int _waterfallSkipCount = 0;
+            for (int i = 0; i <= 30000; i++)
+            {
+                Model _model = new Model();
+                _model.Color = new SolidColorBrush(Color.FromArgb(255, (byte)(i % 256), 100, 150));
+                _model.Index = i;
+                _waterfallCache.Add(_model);
+            }
+            LoadMoreCommand = new RelayCommand(async () => { 
+                WaterfallAvaloniaList.AddRange(_waterfallCache.Skip(_waterfallSkipCount).Take(50));
+                _waterfallSkipCount += 50;
+            });
         }
 
         [ObservableProperty]
         Model _SelectedItem = new Model();
 
         [ObservableProperty]
-        ObservableCollection<Model> _LargeScaleDataOC = new ObservableCollection<Model>();
+        AvaloniaList<Model> _LargeScaleDataAvaloniaList = new AvaloniaList<Model>();
 
         [ObservableProperty]
-        ObservableCollection<Model> _SmallScaleDataOC = new ObservableCollection<Model>();
+        AvaloniaList<Model> _SmallScaleDataAvaloniaList = new AvaloniaList<Model>();
+
+        [ObservableProperty]
+        AvaloniaList<Model> _WaterfallAvaloniaList=new AvaloniaList<Model>();
+
+        
+        public RelayCommand LoadMoreCommand { get; }
     }
 }

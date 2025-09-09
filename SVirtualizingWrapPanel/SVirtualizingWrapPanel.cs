@@ -22,27 +22,9 @@ namespace SVirtualizingWrapPanel
         public override bool AreHorizontalSnapPointsRegular { get; set; } = false;
         public override bool AreVerticalSnapPointsRegular { get; set; } = false;
 
-
-        Boolean _IsPauseLoadMoreRequested = false;
-
         public override event EventHandler<RoutedEventArgs>? HorizontalSnapPointsChanged;
         public override event EventHandler<RoutedEventArgs>? VerticalSnapPointsChanged;
 
-        public override Boolean IsPauseLoadMoreRequested
-        {
-            get => _IsPauseLoadMoreRequested;
-            set
-            {
-                if (_IsPauseLoadMoreRequested != value)
-                {
-                    _IsPauseLoadMoreRequested = value;
-                    if (!_IsPauseLoadMoreRequested)
-                    {
-                        DetermineWhetherToLoadMore();
-                    }
-                }
-            }
-        }
         public SVirtualizingWrapPanel()
         {
             this.EffectiveViewportChanged += VirtualizingWrapPanel_EffectiveViewportChanged;
@@ -115,24 +97,22 @@ namespace SVirtualizingWrapPanel
                 #endregion
                 InvalidateMeasure();
                 InvalidateArrange();
-                if (!IsPauseLoadMoreRequested)
-                {
-                    DetermineWhetherToLoadMore();
-                }
+                ScrollToLoadMore();
             }
             else
             {
                 _EffectiveViewport = e.EffectiveViewport;
             }
         }
-
-        protected override void DetermineWhetherToLoadMore()
+        protected override void ScrollToLoadMore()
         {
             if (_EffectiveViewport.Top + _EffectiveViewport.Height >= _PanelSize.Height - 300)
             {
-                LoadMore(); // fire and forget
+                OnLoadMore();
             }
         }
+
+
 
 
         protected override int RenderElements(int startIndex)
@@ -180,8 +160,8 @@ namespace SVirtualizingWrapPanel
                         }
                     }
                     if (IsMeasureFinished(_element))
-                    {
-                        _endIndex = i;
+                    {                         
+                        _endIndex = i;                        
                         break;
                     }
                 }
@@ -325,15 +305,15 @@ namespace SVirtualizingWrapPanel
                             _clearStartIndex = Math.Min(e.NewStartingIndex, _CurrentIndex);
                         }
                         else
-                        { 
-                            _clearStartIndex= _LastIndex;
-                        }
+                        {
+                            _clearStartIndex = _LastIndex;
+                        }                        
                         for (int i = _clearStartIndex; i < Items.Count; i++)
                         {
                             if (_ElementDictionary.TryGetValue(i, out var _element))
                             {
                                 if (_element.Control is { })
-                                {
+                                {                                    
                                     RemoveInternalChild(_element.Control);
                                     ItemContainerGenerator?.ClearItemContainer(_element.Control);
                                     _ElementDictionary.Remove(i);
@@ -343,7 +323,8 @@ namespace SVirtualizingWrapPanel
                         }
                         break;
                     }
-                case NotifyCollectionChangedAction.Remove: {
+                case NotifyCollectionChangedAction.Remove:
+                    {
                         int _clearStartIndex = 0;
                         if (e.OldStartingIndex < _LastIndex)
                         {
@@ -368,7 +349,7 @@ namespace SVirtualizingWrapPanel
                         }
                         break;
                     }
-                case NotifyCollectionChangedAction.Reset: 
+                case NotifyCollectionChangedAction.Reset:
                     {
                         for (int i = 0; i < Items.Count; i++)
                         {
@@ -388,10 +369,6 @@ namespace SVirtualizingWrapPanel
             }
             base.OnItemsChanged(items, e);
             RenderElements(_CurrentIndex);
-            if (!IsLoadingMore && !IsPauseLoadMoreRequested)
-            {
-                LoadMore();
-            }
         }
 
 
@@ -405,10 +382,7 @@ namespace SVirtualizingWrapPanel
 
             if (!_ElementDictionary.ContainsKey(index))
             {
-                if (HasMoreItems)
-                {
-                    LoadMore();
-                }
+                OnLoadMore();
                 return null;
             }
 

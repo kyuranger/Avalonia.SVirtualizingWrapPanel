@@ -31,8 +31,26 @@
 	</Window.Styles>
 	<Grid RowDefinitions="*,auto">
 		<TabControl Margin="5">
+			<TabItem Header="Infinite Scroll With Waterfall Layout">
+				<ScrollViewer>
+					<ItemsControl ItemsSource="{Binding WaterfallAvaloniaList}">
+						<ItemsControl.ItemsPanel>
+							<ItemsPanelTemplate>
+								<Local:SVirtualizingWrapPanel LoadMore="{Binding LoadMoreCommand}"></Local:SVirtualizingWrapPanel>
+							</ItemsPanelTemplate>
+						</ItemsControl.ItemsPanel>
+						<ItemsControl.ItemTemplate>
+							<DataTemplate x:DataType="Local:Model">
+								<Border Width="312" Background="{Binding Color}" Height="140" Margin="1">
+									<TextBlock TextAlignment="Center" TextWrapping="Wrap" Width="50" Text="{Binding Index}" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center"></TextBlock>
+								</Border>
+							</DataTemplate>
+						</ItemsControl.ItemTemplate>
+					</ItemsControl>
+				</ScrollViewer>
+			</TabItem>
 			<TabItem Header="Small-scale data testing(SVirtualizingWrapPanel)">
-				<ListBox Classes="Tag" ItemsSource="{Binding SmallScaleDataOC}" Width="664" Height="267"  SelectedItem="{Binding SelectedItem}">
+				<ListBox Classes="Tag" ItemsSource="{Binding SmallScaleDataAvaloniaList}" Width="664" Height="267"  SelectedItem="{Binding SelectedItem}">
 					<ListBox.ItemsPanel>
 						<ItemsPanelTemplate>
 							<Local:SVirtualizingWrapPanel></Local:SVirtualizingWrapPanel>
@@ -49,7 +67,7 @@
 			</TabItem>
 			<TabItem Header="Large-scale data testing(SVirtualizingWrapPanel)">
 				<ScrollViewer>
-					<ItemsControl ItemsSource="{Binding LargeScaleDataOC}">
+					<ItemsControl ItemsSource="{Binding LargeScaleDataAvaloniaList}">
 						<ItemsControl.ItemsPanel>
 							<ItemsPanelTemplate>
 								<Local:SVirtualizingWrapPanel></Local:SVirtualizingWrapPanel>
@@ -67,7 +85,7 @@
 			</TabItem>
 			<TabItem Header="Large-scale data testing(SVirtualizingStackPanel)">
 				<ScrollViewer>
-					<ItemsControl ItemsSource="{Binding LargeScaleDataOC}">
+					<ItemsControl ItemsSource="{Binding LargeScaleDataAvaloniaList}">
 						<ItemsControl.ItemsPanel>
 							<ItemsPanelTemplate>
 								<Local:SVirtualizingStackPanel></Local:SVirtualizingStackPanel>
@@ -82,7 +100,7 @@
 						</ItemsControl.ItemTemplate>
 					</ItemsControl>
 				</ScrollViewer>
-			</TabItem>
+			</TabItem>		
 		</TabControl>		
 	</Grid>
 </Window>

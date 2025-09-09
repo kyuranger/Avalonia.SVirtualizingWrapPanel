@@ -32,26 +32,9 @@ namespace SVirtualizingWrapPanel
         public override bool AreVerticalSnapPointsRegular { get; set; } = false;
 
 
-        Boolean _IsPauseLoadMoreRequested = false;
-
         public override event EventHandler<RoutedEventArgs>? HorizontalSnapPointsChanged;
         public override event EventHandler<RoutedEventArgs>? VerticalSnapPointsChanged;
 
-        public override Boolean IsPauseLoadMoreRequested
-        {
-            get => _IsPauseLoadMoreRequested;
-            set
-            {
-                if (_IsPauseLoadMoreRequested != value)
-                {
-                    _IsPauseLoadMoreRequested = value;
-                    if (!_IsPauseLoadMoreRequested)
-                    {
-                        DetermineWhetherToLoadMore();
-                    }
-                }
-            }
-        }
         public SVirtualizingStackPanel()
         {
             this.EffectiveViewportChanged += SVirtualizingStackPanel_EffectiveViewportChanged;
@@ -119,10 +102,30 @@ namespace SVirtualizingWrapPanel
                     //Debug.WriteLine("firstIndex:" + _firstIndex);
                     #endregion
                     EffectiveViewportChangedRender(_firstIndex);
+
+                    ScrollToLoadMore();
                 }
                 else
                 {
                     _EffectiveViewport = e.EffectiveViewport;
+                }
+            }
+        }
+
+        protected override void ScrollToLoadMore()
+        {
+            if (Orientation == Orientation.Vertical)
+            {
+                if (_EffectiveViewport.Top + _EffectiveViewport.Height >= _PanelSize.Height - 300)
+                {
+                    OnLoadMore();
+                }
+            }
+            else
+            {
+                if (_EffectiveViewport.Left + _EffectiveViewport.Width >= _PanelSize.Width - 300)
+                {
+                    OnLoadMore();
                 }
             }
         }
@@ -157,7 +160,7 @@ namespace SVirtualizingWrapPanel
                             RemoveInternalChild(_element.Control);
                             ItemContainerGenerator.ClearItemContainer(_element.Control);
                             _element.Control = null;
-                            //_element.IsRendered = false;
+                            _element.IsRendered = false;
                             //Debug.WriteLine($"回收{i}");
                         }
                     }
@@ -166,19 +169,10 @@ namespace SVirtualizingWrapPanel
             #endregion
             InvalidateMeasure();
             InvalidateArrange();
-            if (!IsPauseLoadMoreRequested)
-            {
-                DetermineWhetherToLoadMore();
-            }
+           
         }
 
-        protected override void DetermineWhetherToLoadMore()
-        {
-            if (_EffectiveViewport.Top + _EffectiveViewport.Height >= _PanelSize.Height - 300)
-            {
-                LoadMore(); // fire and forget
-            }
-        }
+      
 
 
         protected override int RenderElements(int startIndex)
@@ -481,10 +475,7 @@ namespace SVirtualizingWrapPanel
             }
             base.OnItemsChanged(items, e);
             RenderElements(_CurrentIndex);
-            if (!IsLoadingMore && !IsPauseLoadMoreRequested)
-            {
-                LoadMore();
-            }
+           
         }
 
 
@@ -498,10 +489,7 @@ namespace SVirtualizingWrapPanel
 
             if (!_ElementDictionary.ContainsKey(index))
             {
-                if (HasMoreItems)
-                {
-                    LoadMore();
-                }
+                OnLoadMore();
                 return null;
             }
 

@@ -10,11 +10,36 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace SVirtualizingWrapPanel
 {
     public abstract class SVirtualizingPanel : VirtualizingPanel, IScrollSnapPointsInfo
     {
+        public static readonly StyledProperty<ICommand?> LoadMoreProperty =
+  AvaloniaProperty.Register<SVirtualizingPanel, ICommand?>(nameof(LoadMore));
+
+        public ICommand? LoadMore
+        {
+            get { return GetValue(LoadMoreProperty); }
+            set { SetValue(LoadMoreProperty, value); }
+        }
+
+
+        public static readonly StyledProperty<Boolean> IsReachEndProperty =
+AvaloniaProperty.Register<SVirtualizingPanel, Boolean>(nameof(IsReachEnd));
+
+        public Boolean IsReachEnd
+        {
+            get { return GetValue(IsReachEndProperty); }
+            set { SetValue(IsReachEndProperty, value); }
+        }
+        protected override void OnLoaded(RoutedEventArgs e)
+        {
+            base.OnLoaded(e);
+            ScrollToLoadMore();
+        }
+
         public abstract bool AreHorizontalSnapPointsRegular { get; set; }
         public abstract bool AreVerticalSnapPointsRegular { get; set; }
 
@@ -23,23 +48,22 @@ namespace SVirtualizingWrapPanel
 
         public abstract IReadOnlyList<double> GetIrregularSnapPoints(Orientation orientation, SnapPointsAlignment snapPointsAlignment);
         public abstract double GetRegularSnapPoints(Orientation orientation, SnapPointsAlignment snapPointsAlignment, out double offset);
-
-        public Boolean HasMoreItems { get; set; } = true;
-        public Boolean IsLoadingMore { get; protected set; } = false;
-        public EventHandler? LoadMoreRequested;
-
-        public abstract Boolean IsPauseLoadMoreRequested { get; set; }
+        
+        public Boolean IsLoadingMore { get; protected set; } = false;        
+    
         protected int _CurrentIndex = 0;
-        protected int _LastIndex = 0;     
-        protected void LoadMore()
+        protected int _LastIndex = 0;
+
+        protected abstract void ScrollToLoadMore();
+        protected void OnLoadMore()
         {
-            if (IsLoadingMore || !HasMoreItems)
+            if (IsLoadingMore || IsReachEnd)
                 return;
 
             IsLoadingMore = true;
             try
             {
-                LoadMoreRequested?.Invoke(this, EventArgs.Empty);
+                LoadMore?.Execute(null);
             }
             catch (Exception ex)
             {
@@ -49,8 +73,7 @@ namespace SVirtualizingWrapPanel
             {
                 IsLoadingMore = false;
             }
-        }
-        protected abstract void DetermineWhetherToLoadMore();
+        }        
         protected class ElementRenderModel
         {
             public Control? Control { get; set; } = null;
@@ -74,14 +97,14 @@ namespace SVirtualizingWrapPanel
 
         protected Control CreateVirtualizingElement(object item, int index, string recycleKey)
         {
-            var generator = ItemContainerGenerator!;
-            var container = generator.CreateContainer(item, index, recycleKey);
-            generator.PrepareItemContainer(container, item, index);
-            AddInternalChild(container);
-            generator.ItemContainerPrepared(container, item, index);
+            var _generator = ItemContainerGenerator!;
+            var _container = _generator.CreateContainer(item, index, recycleKey);
+            _generator.PrepareItemContainer(_container, item, index);
+            AddInternalChild(_container);
+            _generator.ItemContainerPrepared(_container, item, index);
 
-            container.Measure(Size.Infinity);
-            return container;
+            _container.Measure(Size.Infinity);
+            return _container;
         }
 
     }
