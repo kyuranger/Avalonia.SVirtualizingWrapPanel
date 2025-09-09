@@ -76,11 +76,13 @@ AvaloniaProperty.Register<SVirtualizingPanel, Boolean>(nameof(IsReachEnd));
         }        
         protected class ElementRenderModel
         {
-            public Control? Control { get; set; } = null;
-            public double Width { get; set; } = 0;
-            public double Height { get; set; } = 0;
+            public Control? Control { get; set; } = null;         
             public double Left { get; set; } = 0;
             public double Top { get; set; } = 0;
+
+            public double Width { get; set; } = 0;
+
+            public double Height { get; set; } = 0;
             public Boolean IsRendered { get; set; } = false;
 
         }
@@ -93,7 +95,7 @@ AvaloniaProperty.Register<SVirtualizingPanel, Boolean>(nameof(IsReachEnd));
         protected double _CurrentLineHeight = 0;
 
         protected abstract int RenderElements(int startIndex);
-        protected abstract Boolean IsMeasureFinished(Control control);
+        //protected abstract Boolean IsMeasureFinished(Control control);
 
         protected Control CreateVirtualizingElement(object item, int index, string recycleKey)
         {

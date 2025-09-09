@@ -60,7 +60,7 @@ namespace SVirtualizingWrapPanel
                     {
                         if (_ElementDictionary.TryGetValue(i, out var _element))
                         {
-                            if (_element.Top >= _EffectiveViewport.Top || _element.Top + _element.Height > _EffectiveViewport.Top || _element.Top + _MaximumItemHeight > _EffectiveViewport.Top)
+                            if (_element.Top + _element.Height > _EffectiveViewport.Top || _element.Top + _MaximumItemHeight > _EffectiveViewport.Top)
                             {
                                 _firstIndex = i;
                                 break;
@@ -92,7 +92,7 @@ namespace SVirtualizingWrapPanel
                     {
                         if (_ElementDictionary.TryGetValue(i, out var _element))
                         {
-                            if (_element.Left >= _EffectiveViewport.Left || _element.Left + _element.Width > _EffectiveViewport.Left || _element.Left + _MaximumItemWidth > _EffectiveViewport.Left)
+                            if (_element.Left + _element.Width > _EffectiveViewport.Left || _element.Left + _MaximumItemWidth > _EffectiveViewport.Left)
                             {
                                 _firstIndex = i;
                                 break;
@@ -169,10 +169,10 @@ namespace SVirtualizingWrapPanel
             #endregion
             InvalidateMeasure();
             InvalidateArrange();
-           
+
         }
 
-      
+
 
 
         protected override int RenderElements(int startIndex)
@@ -191,75 +191,58 @@ namespace SVirtualizingWrapPanel
                     _CurrentLineHeight = 0;
                 }
                 _CurrentLineWidth = 0;
-                #region//先计算需渲染的每个控件所需的空间          
-
-
-                for (int i = _index; i < Items.Count; i++)
+                var _boundsWidth = this.Bounds.Width;
+                for (int i = startIndex; i < Items.Count; i++)
                 {
                     var _item = Items[i];
                     if (_item is { })
                     {
-                        Control _element = new Control();
-                        if (!_ElementDictionary.TryGetValue(i, out var _value))//字典里面不包含该元素
+                        Control? _element = null;
+                        if (!_ElementDictionary.TryGetValue(i, out var _value))
                         {
                             _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
-                            _value = new ElementRenderModel() { Width = _EffectiveViewport.Width, Height = _element.DesiredSize.Height, Control = _element, IsRendered = true };
-                            _ElementDictionary.Add(i, _value);
+                            var _newValue = new ElementRenderModel();
+                            _newValue.Top = _CurrentLineHeight;
+                            _newValue.Left = 0;
+                            _CurrentLineHeight += _element.DesiredSize.Height;
+                            _newValue.Width = _boundsWidth;
+                            _newValue.Height = _element.DesiredSize.Height;
+                            _newValue.Control = _element;
+                            _newValue.IsRendered = true;
+
+                            _ElementDictionary.Add(i, _newValue);
                         }
                         else
                         {
-                            if (_value.Control is not { })
+                            _element = _value.Control;
+                            if (_element is { })
                             {
-                                _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
-                                _value = new ElementRenderModel() { Width = _EffectiveViewport.Width, Height = _element.DesiredSize.Height, Control = _element, IsRendered = true };
-                                _ElementDictionary[i] = _value;
+                                _value.Width = _boundsWidth;
+                                _value.Height = _element.DesiredSize.Height;
+                                _value.Top = _CurrentLineHeight;
+                                _value.Left = 0;
+                                _CurrentLineHeight += _element.DesiredSize.Height;
                             }
                             else
                             {
-                                _element = _value.Control;
+                                _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
+                                _value.Top = _CurrentLineHeight;
+                                _value.Left = 0;
+                                _CurrentLineHeight += _element.DesiredSize.Height;
+                                _value.Width = _boundsWidth;
+                                _value.Height = _element.DesiredSize.Height;
+                                _value.Control = _element;
+                                _value.IsRendered = true;
                             }
                         }
-                        if (IsMeasureFinished(_element))
+                        if (_CurrentLineHeight > _EffectiveViewport.Top + _EffectiveViewport.Height)
                         {
                             _endIndex = i;
                             break;
                         }
                     }
                 }
-                #endregion
-                #region//尝试进行排列
-                _CurrentLineHeight = 0;
-                _CurrentLineWidth = 0;
-                for (int i = 0; i < Items.Count; i++)
-                {
 
-                    if (_ElementDictionary.TryGetValue(i, out var _element))
-                    {
-                        var _control = _element.Control;
-                        if (_element.IsRendered)
-                        {
-                            _element.Height = _element.Height;
-                            _element.Width = _EffectiveViewport.Width;
-                            _element.Top = _CurrentLineHeight;
-                            _element.Left = 0;
-                            _CurrentLineHeight += _element.Height;
-                            _MaximumItemHeight = Math.Max(_MaximumItemHeight, _element.Height);
-                        }
-                        else
-                        {
-                            _element.Height = _MaximumItemHeight;
-                            _element.Width = _EffectiveViewport.Width;
-                            _element.Top = _CurrentLineHeight;
-                            _element.Left = 0;
-                            _CurrentLineHeight += _element.Height;
-                        }
-                    }
-                    else
-                    {
-                        _ElementDictionary.Add(i, new ElementRenderModel() { Left = 0, Top = _CurrentLineHeight, Width = _EffectiveViewport.Width });
-                    }
-                }
-                #endregion
                 _PanelSize = new Size(_EffectiveViewport.Width, _CurrentLineHeight);
             }
             else
@@ -273,75 +256,59 @@ namespace SVirtualizingWrapPanel
                     _CurrentLineWidth = 0;
                 }
                 _CurrentLineHeight = 0;
-                #region//先计算需渲染的每个控件所需的空间          
-
-
-                for (int i = _index; i < Items.Count; i++)
+                var _boundsHeight = this.Bounds.Height;
+                for (int i = startIndex; i < Items.Count; i++)
                 {
                     var _item = Items[i];
                     if (_item is { })
                     {
-                        Control _element = new Control();
-                        if (!_ElementDictionary.TryGetValue(i, out var _value))//字典里面不包含该元素
+                        Control? _element = null;
+                        if (!_ElementDictionary.TryGetValue(i, out var _value))
                         {
                             _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
-                            _value = new ElementRenderModel() { Width = _element.DesiredSize.Width, Height = _EffectiveViewport.Height, Control = _element, IsRendered = true };
-                            _ElementDictionary.Add(i, _value);
+                            var _newValue = new ElementRenderModel();
+                            _newValue.Top = 0;
+                            _newValue.Left = _CurrentLineWidth;
+                            _newValue.Width = _element.DesiredSize.Width;
+                            _newValue.Height = _boundsHeight;
+                            _CurrentLineWidth += _element.DesiredSize.Width;
+
+                            _newValue.Control = _element;
+                            _newValue.IsRendered = true;
+
+                            _ElementDictionary.Add(i, _newValue);
                         }
                         else
                         {
-                            if (_value.Control is not { })
+                            _element = _value.Control;
+                            if (_element is { })
                             {
-                                _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
-                                _value = new ElementRenderModel() { Width = _element.DesiredSize.Width, Height = _EffectiveViewport.Height, Control = _element, IsRendered = true };
-                                _ElementDictionary[i] = _value;
+                                _value.Width = _element.DesiredSize.Width;
+                                _value.Height = _boundsHeight;
+                                _value.Top = 0;
+                                _value.Left = _CurrentLineWidth;
+                                _CurrentLineWidth += _element.DesiredSize.Width;
                             }
                             else
                             {
-                                _element = _value.Control;
+                                _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
+                                _value.Top = 0;
+                                _value.Left = _CurrentLineWidth;
+                                _value.Width = _element.DesiredSize.Width;
+                                _value.Height = _boundsHeight;
+                                _CurrentLineWidth += _element.DesiredSize.Width;
+
+                                _value.Control = _element;
+                                _value.IsRendered = true;
                             }
                         }
-                        if (IsMeasureFinished(_element))
+                        if (_CurrentLineWidth > _EffectiveViewport.Left + _EffectiveViewport.Width)
                         {
                             _endIndex = i;
                             break;
                         }
                     }
                 }
-                #endregion
-                #region//尝试进行排列
-                _CurrentLineHeight = 0;
-                _CurrentLineWidth = 0;
-                for (int i = 0; i < Items.Count; i++)
-                {
-
-                    if (_ElementDictionary.TryGetValue(i, out var _element))
-                    {
-                        var _control = _element.Control;
-                        if (_element.IsRendered)
-                        {
-                            _element.Height = _EffectiveViewport.Height;
-                            _element.Width = _element.Width;
-                            _element.Top = 0;
-                            _element.Left = _CurrentLineWidth;
-                            _CurrentLineWidth += _element.Width;
-                            _MaximumItemWidth = Math.Max(_MaximumItemWidth, _element.Width);
-                        }
-                        else
-                        {
-                            _element.Height = _EffectiveViewport.Height;
-                            _element.Width = _MaximumItemWidth;
-                            _element.Top = 0;
-                            _element.Left = _CurrentLineWidth;
-                            _CurrentLineWidth += _element.Width;
-                        }
-                    }
-                    else
-                    {
-                        _ElementDictionary.Add(i, new ElementRenderModel() { Left = _CurrentLineWidth, Top = 0, Height = _EffectiveViewport.Height });
-                    }
-                }
-                #endregion
                 _PanelSize = new Size(_CurrentLineWidth, _EffectiveViewport.Height);
             }
             #region//正式Measure自身
@@ -352,29 +319,6 @@ namespace SVirtualizingWrapPanel
             #endregion
             return _endIndex;
         }
-        #region//计算是否Measure完成        
-        protected override Boolean IsMeasureFinished(Control control)
-        {
-            if (Orientation == Orientation.Vertical)
-            {
-                if (_CurrentLineHeight + control.DesiredSize.Height > _EffectiveViewport.Height + _EffectiveViewport.Top)
-                {
-                    return true;
-                }
-                _CurrentLineHeight += control.DesiredSize.Height;
-                return false;
-            }
-            else
-            {
-                if (_CurrentLineWidth + control.DesiredSize.Width > _EffectiveViewport.Width + _EffectiveViewport.Left)
-                {
-                    return true;
-                }
-                _CurrentLineWidth += control.DesiredSize.Width;
-                return false;
-            }
-        }
-        #endregion
         protected override Size MeasureOverride(Size availableSize)
         {
             foreach (var i in _ElementDictionary)
@@ -390,10 +334,9 @@ namespace SVirtualizingWrapPanel
         {
             foreach (var i in _ElementDictionary)
             {
-                var _control = i.Value.Control;
-                if (_control is { })
+                if (i.Value.Control is { })
                 {
-                    _control.Arrange(new Rect(i.Value.Left, i.Value.Top, i.Value.Width, i.Value.Height));
+                    i.Value.Control.Arrange(new Rect(i.Value.Left, i.Value.Top, i.Value.Width, i.Value.Height));
                 }
             }
             return finalSize;
@@ -475,7 +418,7 @@ namespace SVirtualizingWrapPanel
             }
             base.OnItemsChanged(items, e);
             RenderElements(_CurrentIndex);
-           
+
         }
 
 

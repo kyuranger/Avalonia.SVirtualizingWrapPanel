@@ -47,7 +47,7 @@ namespace SVirtualizingWrapPanel
                 {
                     if (_ElementDictionary.TryGetValue(i, out var _element))
                     {
-                        if (_element.Top >= _EffectiveViewport.Top || _element.Top + _element.Height > _EffectiveViewport.Top || _element.Top + _MaximumItemHeight > _EffectiveViewport.Top)
+                        if (_element.Top + _element.Height > _EffectiveViewport.Top || _element.Top + _MaximumItemHeight > _EffectiveViewport.Top)
                         {
                             _firstIndex = i;
                             break;
@@ -74,7 +74,7 @@ namespace SVirtualizingWrapPanel
                 #endregion
                 #region//正式渲染                               
                 _LastIndex = RenderElements(_startIndex);
-                //Debug.WriteLine("lastIndex:" + _lastIndex);
+                //Debug.WriteLine("lastIndex:" + _LastIndex);
                 #endregion
                 #region//回收其他元素
                 for (int i = 0; i < Items.Count; i++)
@@ -88,7 +88,7 @@ namespace SVirtualizingWrapPanel
                                 RemoveInternalChild(_element.Control);
                                 ItemContainerGenerator.ClearItemContainer(_element.Control);
                                 _element.Control = null;
-                                //_element.IsRendered = false;
+                                _element.IsRendered = false;
                                 //Debug.WriteLine($"回收{i}");
                             }
                         }
@@ -132,112 +132,109 @@ namespace SVirtualizingWrapPanel
             }
             _CurrentLineWidth = 0;
             #region//先计算需渲染的每个控件所需的空间          
-
-
-            for (int i = _index; i < Items.Count; i++)
+            for (int i = startIndex; i < Items.Count; i++)
             {
                 var _item = Items[i];
                 if (_item is { })
                 {
-                    Control _element = new Control();
-                    if (!_ElementDictionary.TryGetValue(i, out var _value))//字典里面不包含该元素
+                    Control? _element = null;
+                    if (!_ElementDictionary.TryGetValue(i, out var _value))
                     {
                         _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
-                        _value = new ElementRenderModel() { Width = _element.DesiredSize.Width, Height = _element.DesiredSize.Height, Control = _element, IsRendered = true };
-                        _ElementDictionary.Add(i, _value);
-                    }
-                    else
-                    {
-                        if (_value.Control is not { })
+                        _maxLineHeight = Math.Max(_maxLineHeight, _element.DesiredSize.Height);
+                        var _newValue = new ElementRenderModel();
+                        if (_CurrentLineWidth + _element.DesiredSize.Width > _maxLineWidth)
                         {
-                            _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
-                            _value = new ElementRenderModel() { Width = _element.DesiredSize.Width, Height = _element.DesiredSize.Height, Control = _element, IsRendered = true };
-                            _ElementDictionary[i] = _value;
+                            _CurrentLineHeight += _maxLineHeight;
+                            _CurrentLineWidth = _element.DesiredSize.Width;
+                            if (i != Items.Count - 1)
+                            {
+                                _maxLineHeight = 0;
+                            }
+                            _newValue.Top = _CurrentLineHeight;
+                            _newValue.Left = 0;
+                            _newValue.Width = _element.DesiredSize.Width;
+                            _newValue.Height = _element.DesiredSize.Height;
                         }
                         else
                         {
-                            _element = _value.Control;
+                            _newValue.Top = _CurrentLineHeight;
+                            _newValue.Left = _CurrentLineWidth;
+                            _newValue.Width = _element.DesiredSize.Width;
+                            _newValue.Height = _element.DesiredSize.Height;
+                            _CurrentLineWidth += _element.DesiredSize.Width;
+                        }
+                        _newValue.Control = _element;
+                        _newValue.IsRendered = true;
+
+                        _ElementDictionary.Add(i, _newValue);
+                    }
+                    else
+                    {
+                        _element = _value.Control;
+                        if (_element is { })
+                        {
+                            _maxLineHeight = Math.Max(_maxLineHeight, _element.DesiredSize.Height);
+                            if (_CurrentLineWidth + _element.DesiredSize.Width > _maxLineWidth)
+                            {
+                                _CurrentLineHeight += _maxLineHeight;
+                                _CurrentLineWidth = _element.DesiredSize.Width;
+                                if (i != Items.Count - 1)
+                                {
+                                    _maxLineHeight = 0;
+                                }
+                                _value.Top = _CurrentLineHeight;
+                                _value.Left = 0;
+                                _value.Width = _element.DesiredSize.Width;
+                                _value.Height = _element.DesiredSize.Height;
+                            }
+                            else
+                            {
+                                _value.Top = _CurrentLineHeight;
+                                _value.Left = _CurrentLineWidth;
+                                _value.Width = _element.DesiredSize.Width;
+                                _value.Height = _element.DesiredSize.Height;
+                                _CurrentLineWidth += _element.DesiredSize.Width;
+                            }
+                        }
+                        else
+                        {
+                            _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
+                            _maxLineHeight = Math.Max(_maxLineHeight, _element.DesiredSize.Height);
+                            if (_CurrentLineWidth + _element.DesiredSize.Width > _maxLineWidth)
+                            {
+                                _CurrentLineHeight += _maxLineHeight;
+                                _CurrentLineWidth = _element.DesiredSize.Width;
+                                if (i != Items.Count - 1)
+                                {
+                                    _maxLineHeight = 0;
+                                }
+                                _value.Top = _CurrentLineHeight;
+                                _value.Left = 0;
+                                _value.Width = _element.DesiredSize.Width;
+                                _value.Height = _element.DesiredSize.Height;
+                            }
+                            else
+                            {
+                                _value.Top = _CurrentLineHeight;
+                                _value.Left = _CurrentLineWidth;
+                                _value.Width = _element.DesiredSize.Width;
+                                _value.Height = _element.DesiredSize.Height;
+                                _CurrentLineWidth += _element.DesiredSize.Width;
+                            }
+                            _value.Control = _element;
+                            _value.IsRendered = true;
                         }
                     }
-                    if (IsMeasureFinished(_element))
-                    {                         
-                        _endIndex = i;                        
+                    if (_CurrentLineHeight > _EffectiveViewport.Top + _EffectiveViewport.Height)
+                    {
+                        _endIndex = i;
                         break;
                     }
                 }
             }
             #endregion
-            #region//尝试进行排列
-            _CurrentLineHeight = 0;
-            _CurrentLineWidth = 0;
-            _maxLineHeight = 0;
-            for (int i = 0; i < Items.Count; i++)
-            {
 
-                if (_ElementDictionary.TryGetValue(i, out var _element))
-                {
-                    var _control = _element.Control;
-                    if (_element.IsRendered)
-                    {
-                        _maxLineHeight = Math.Max(_maxLineHeight, _element.Height);
-                        if (_CurrentLineWidth + _element.Width > _maxLineWidth)
-                        {
-                            _CurrentLineHeight += _maxLineHeight;
-                            _CurrentLineWidth = 0;
-                            if (i != Items.Count - 1)
-                            {
-                                _maxLineHeight = 0;
-                            }
-                            _element.Height = _element.Height;
-                            _element.Width = _element.Width;
-                            _element.Top = _CurrentLineHeight;
-                            _element.Left = _CurrentLineWidth;
-                            _CurrentLineWidth = _element.Width;
-                        }
-                        else
-                        {
-                            _element.Height = _element.Height;
-                            _element.Width = _element.Width;
-                            _element.Top = _CurrentLineHeight;
-                            _element.Left = _CurrentLineWidth;
-                            _CurrentLineWidth += _element.Width;
-                        }
-                    }
-                    else
-                    {
-                        _maxLineHeight = Math.Max(_maxLineHeight, _MaximumItemHeight);
-                        if (_CurrentLineWidth + _MaximumItemWidth > _maxLineWidth)
-                        {
-                            _CurrentLineHeight += _maxLineHeight;
-                            _CurrentLineWidth = 0;
-                            _element.Left = _CurrentLineWidth;
-                            _element.Top = _CurrentLineHeight;
-                        }
-                        else
-                        {
-                            _element.Left = _CurrentLineWidth;
-                            _element.Top = _CurrentLineHeight;
-                            _CurrentLineWidth += _MaximumItemWidth;
-                        }
-                    }
-                }
-                else
-                {
-                    _maxLineHeight = Math.Max(_maxLineHeight, _MaximumItemHeight);
-                    if (_CurrentLineWidth + _MaximumItemWidth > _maxLineWidth)
-                    {
-                        _CurrentLineHeight += _maxLineHeight;
-                        _CurrentLineWidth = 0;
-                        _ElementDictionary.Add(i, new ElementRenderModel() { Left = _CurrentLineWidth, Top = _CurrentLineHeight });
-                    }
-                    else
-                    {
-                        _ElementDictionary.Add(i, new ElementRenderModel() { Left = _CurrentLineWidth, Top = _CurrentLineHeight });
-                        _CurrentLineWidth += _MaximumItemWidth;
-                    }
-                }
-            }
-            #endregion
             _PanelSize = new Size(_EffectiveViewport.Width, _CurrentLineHeight + _maxLineHeight);
             #region//正式Measure自身
             InvalidateMeasure();
@@ -247,35 +244,15 @@ namespace SVirtualizingWrapPanel
             #endregion                     
             return _endIndex;
         }
-        #region//计算是否Measure完成        
-        protected override Boolean IsMeasureFinished(Control control)
-        {
-            if (_CurrentLineWidth + control.DesiredSize.Width > this.Bounds.Width)//换行
-            {
-                if (_CurrentLineHeight + control.DesiredSize.Height > _EffectiveViewport.Height + _EffectiveViewport.Top)
-                {
-                    return true;
-                }
-                _CurrentLineHeight += control.DesiredSize.Height;
-                _CurrentLineWidth = control.DesiredSize.Width;
-                return false;
-            }
-            else
-            {
-                _CurrentLineWidth += control.DesiredSize.Width;
-                _MaximumItemHeight = Math.Max(control.DesiredSize.Height, _MaximumItemHeight);
-                _MaximumItemWidth = Math.Max(control.DesiredSize.Width, _MaximumItemWidth);
-                return false;
-            }
-        }
-        #endregion
         protected override Size MeasureOverride(Size availableSize)
         {
             foreach (var i in _ElementDictionary)
             {
                 if (i.Value.Control is { })
                 {
+
                     i.Value.Control.Measure(new Size(i.Value.Width, i.Value.Height));
+
                 }
             }
             return _PanelSize;
@@ -284,10 +261,9 @@ namespace SVirtualizingWrapPanel
         {
             foreach (var i in _ElementDictionary)
             {
-                var _control = i.Value.Control;
-                if (_control is { })
+                if (i.Value.Control is { })
                 {
-                    _control.Arrange(new Rect(i.Value.Left, i.Value.Top, i.Value.Width, i.Value.Height));
+                    i.Value.Control.Arrange(new Rect(i.Value.Left, i.Value.Top, i.Value.Width, i.Value.Height));
                 }
             }
             return finalSize;
@@ -307,13 +283,13 @@ namespace SVirtualizingWrapPanel
                         else
                         {
                             _clearStartIndex = _LastIndex;
-                        }                        
+                        }
                         for (int i = _clearStartIndex; i < Items.Count; i++)
                         {
                             if (_ElementDictionary.TryGetValue(i, out var _element))
                             {
                                 if (_element.Control is { })
-                                {                                    
+                                {
                                     RemoveInternalChild(_element.Control);
                                     ItemContainerGenerator?.ClearItemContainer(_element.Control);
                                     _ElementDictionary.Remove(i);

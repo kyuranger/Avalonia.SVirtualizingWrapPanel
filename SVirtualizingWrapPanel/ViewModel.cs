@@ -46,6 +46,8 @@ namespace SVirtualizingWrapPanel
                 WaterfallAvaloniaList.AddRange(_waterfallCache.Skip(_waterfallSkipCount).Take(50));
                 _waterfallSkipCount += 50;
             });
+
+            //WaterfallAvaloniaList.AddRange(_waterfallCache.Skip(_waterfallSkipCount).Take(50));
         }
 
         [ObservableProperty]
