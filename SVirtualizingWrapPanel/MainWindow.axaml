@@ -31,6 +31,24 @@
 	</Window.Styles>
 	<Grid RowDefinitions="*,auto">
 		<TabControl Margin="5">
+			<TabItem Header="Virtualizing Reorderable UniformGrid">
+				<ScrollViewer>
+					<ItemsControl ItemsSource="{Binding WaterfallAvaloniaList}">
+						<ItemsControl.ItemsPanel>
+							<ItemsPanelTemplate>
+								<Local:SVirtualizingReorderableUniformGrid LoadMore="{Binding LoadMoreCommand}" Columns="3" ColumnSpacing="10" RowHeight="60" RowSpacing="10"></Local:SVirtualizingReorderableUniformGrid>
+							</ItemsPanelTemplate>
+						</ItemsControl.ItemsPanel>
+						<ItemsControl.ItemTemplate>
+							<DataTemplate x:DataType="Local:Model">
+								<Border Background="{Binding Color}">
+									<TextBlock TextAlignment="Center" Text="{Binding Index}" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center"></TextBlock>
+								</Border>
+							</DataTemplate>
+						</ItemsControl.ItemTemplate>
+					</ItemsControl>
+				</ScrollViewer>
+			</TabItem>
 			<TabItem Header="Infinite Scroll With Waterfall Layout">
 				<ScrollViewer>
 					<ItemsControl ItemsSource="{Binding WaterfallAvaloniaList}">
