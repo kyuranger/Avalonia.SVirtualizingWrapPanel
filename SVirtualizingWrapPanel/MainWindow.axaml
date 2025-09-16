@@ -36,7 +36,7 @@
 					<ItemsControl ItemsSource="{Binding WaterfallAvaloniaList}">
 						<ItemsControl.ItemsPanel>
 							<ItemsPanelTemplate>
-								<Local:SVirtualizingReorderableUniformGrid LoadMore="{Binding LoadMoreCommand}" Columns="3" ColumnSpacing="10" RowHeight="60" RowSpacing="10"></Local:SVirtualizingReorderableUniformGrid>
+								<Local:SVirtualizingUniformGrid LoadMore="{Binding LoadMoreCommand}" Columns="3" ColumnSpacing="10" RowHeight="60" RowSpacing="10"></Local:SVirtualizingUniformGrid>
 							</ItemsPanelTemplate>
 						</ItemsControl.ItemsPanel>
 						<ItemsControl.ItemTemplate>

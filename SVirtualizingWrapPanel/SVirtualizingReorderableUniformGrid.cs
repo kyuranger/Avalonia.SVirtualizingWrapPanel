@@ -16,11 +16,11 @@ using System.Xml.Linq;
 
 namespace SVirtualizingWrapPanel
 {
-    public class SVirtualizingReorderableUniformGrid : SVirtualizingPanel
+    public class SVirtualizingUniformGrid : SVirtualizingPanel
     {
         
         public static readonly StyledProperty<int> ColumnsProperty =
-  AvaloniaProperty.Register<SVirtualizingReorderableUniformGrid, int>(nameof(Columns), 0);
+  AvaloniaProperty.Register<SVirtualizingUniformGrid, int>(nameof(Columns), 0);
 
         public int Columns
         {
@@ -29,7 +29,7 @@ namespace SVirtualizingWrapPanel
         }
 
         public static readonly StyledProperty<double> RowHeightProperty =
- AvaloniaProperty.Register<SVirtualizingReorderableUniformGrid, double>(nameof(RowHeight), double.PositiveInfinity);
+ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(RowHeight), double.PositiveInfinity);
 
         public double RowHeight
         {
@@ -38,7 +38,7 @@ namespace SVirtualizingWrapPanel
         }
 
         public static readonly StyledProperty<double> RowSpacingProperty =
- AvaloniaProperty.Register<SVirtualizingReorderableUniformGrid, double>(nameof(RowSpacing), 0);
+ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(RowSpacing), 0);
 
         public double RowSpacing
         {
@@ -47,7 +47,7 @@ namespace SVirtualizingWrapPanel
         }
 
         public static readonly StyledProperty<double> ColumnSpacingProperty =
-AvaloniaProperty.Register<SVirtualizingReorderableUniformGrid, double>(nameof(ColumnSpacing), 0);
+AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing), 0);
 
         public double ColumnSpacing
         {
@@ -61,12 +61,12 @@ AvaloniaProperty.Register<SVirtualizingReorderableUniformGrid, double>(nameof(Co
         public override event EventHandler<RoutedEventArgs>? HorizontalSnapPointsChanged;
         public override event EventHandler<RoutedEventArgs>? VerticalSnapPointsChanged;
 
-        public SVirtualizingReorderableUniformGrid()
+        public SVirtualizingUniformGrid()
         {
-            this.EffectiveViewportChanged += SVirtualizingReorderableUniformGrid_EffectiveViewportChanged; ;
+            this.EffectiveViewportChanged += SVirtualizingUniformGrid_EffectiveViewportChanged; ;
         }
 
-        private void SVirtualizingReorderableUniformGrid_EffectiveViewportChanged(object? sender, Avalonia.Layout.EffectiveViewportChangedEventArgs e)
+        private void SVirtualizingUniformGrid_EffectiveViewportChanged(object? sender, Avalonia.Layout.EffectiveViewportChangedEventArgs e)
         {
             //Debug.WriteLine(e.EffectiveViewport.Height);
             //Debug.WriteLine(e.EffectiveViewport.Top);            
