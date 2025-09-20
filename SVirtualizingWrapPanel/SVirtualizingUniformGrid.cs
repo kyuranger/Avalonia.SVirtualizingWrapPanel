@@ -393,19 +393,15 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
                     }
                 case NotifyCollectionChangedAction.Reset:
                     {
-                        for (int i = 0; i < Items.Count; i++)
+                        foreach (var i in _ElementDictionary)
                         {
-                            if (_ElementDictionary.TryGetValue(i, out var _element))
+                            if (i.Value.Control is { })
                             {
-                                if (_element.Control is { })
-                                {
-                                    RemoveInternalChild(_element.Control);
-                                    ItemContainerGenerator?.ClearItemContainer(_element.Control);
-                                    _ElementDictionary.Remove(i);
-                                }
+                                RemoveInternalChild(i.Value.Control);
+                                ItemContainerGenerator?.ClearItemContainer(i.Value.Control);
                             }
-
                         }
+                        _ElementDictionary.Clear();
                         break;
                     }
             }
