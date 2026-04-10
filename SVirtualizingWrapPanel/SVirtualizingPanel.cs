@@ -148,6 +148,21 @@ AvaloniaProperty.Register<SVirtualizingPanel, Boolean>(nameof(IsReachEnd));
             return _effectiveViewport.Left + _effectiveViewport.Width + Math.Max(VirtualizationCacheLength, _maximumItemWidth);
         }
 
+        protected static double GetSnapPointValue(double start, double size, SnapPointsAlignment alignment)
+        {
+            return alignment switch
+            {
+                SnapPointsAlignment.Center => start + size / 2,
+                SnapPointsAlignment.Far => start + size,
+                _ => start
+            };
+        }
+
+        protected static RoutedEventArgs CreateSnapPointsChangedEventArgs()
+        {
+            return new RoutedEventArgs();
+        }
+
         protected Control CreateVirtualizingElement(object item, int index, string recycleKey)
         {
             var _generator = ItemContainerGenerator!;

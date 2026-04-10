@@ -27,8 +27,8 @@ namespace SVirtualizingWrapPanel
             set { SetValue(OrientationProperty, value); }
         }
 
-        public override bool AreHorizontalSnapPointsRegular { get; set; } = false;
-        public override bool AreVerticalSnapPointsRegular { get; set; } = false;
+        public override bool AreHorizontalSnapPointsRegular { get => false; set { } }
+        public override bool AreVerticalSnapPointsRegular { get => false; set { } }
 
 
         public override event EventHandler<RoutedEventArgs>? HorizontalSnapPointsChanged;
@@ -45,6 +45,28 @@ namespace SVirtualizingWrapPanel
         public SVirtualizingStackPanel()
         {
             this.EffectiveViewportChanged += SVirtualizingStackPanel_EffectiveViewportChanged;
+        }
+
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
+            base.OnPropertyChanged(change);
+
+            if (change.Property == BoundsProperty)
+            {
+                if (Orientation == Orientation.Vertical)
+                {
+                    VerticalSnapPointsChanged?.Invoke(this, CreateSnapPointsChangedEventArgs());
+                }
+                else
+                {
+                    HorizontalSnapPointsChanged?.Invoke(this, CreateSnapPointsChangedEventArgs());
+                }
+            }
+            else if (change.Property == OrientationProperty)
+            {
+                HorizontalSnapPointsChanged?.Invoke(this, CreateSnapPointsChangedEventArgs());
+                VerticalSnapPointsChanged?.Invoke(this, CreateSnapPointsChangedEventArgs());
+            }
         }
 
         private void SVirtualizingStackPanel_EffectiveViewportChanged(object? sender, EffectiveViewportChangedEventArgs e)
@@ -386,6 +408,14 @@ namespace SVirtualizingWrapPanel
             }
             base.OnItemsChanged(items, e);
             RenderElements(_currentIndex);
+            if (Orientation == Orientation.Vertical)
+            {
+                VerticalSnapPointsChanged?.Invoke(this, CreateSnapPointsChangedEventArgs());
+            }
+            else
+            {
+                HorizontalSnapPointsChanged?.Invoke(this, CreateSnapPointsChangedEventArgs());
+            }
 
         }
 
@@ -507,12 +537,28 @@ namespace SVirtualizingWrapPanel
 
         public override IReadOnlyList<double> GetIrregularSnapPoints(Orientation orientation, SnapPointsAlignment snapPointsAlignment)
         {
-            return new List<double>();
+            if (orientation != Orientation || _elementDictionary.Count == 0)
+            {
+                return Array.Empty<double>();
+            }
+
+            return orientation == Orientation.Vertical
+                ? _elementDictionary
+                    .OrderBy(pair => pair.Key)
+                    .Select(pair => GetSnapPointValue(pair.Value.Top, pair.Value.Height, snapPointsAlignment))
+                    .Distinct()
+                    .ToList()
+                : _elementDictionary
+                    .OrderBy(pair => pair.Key)
+                    .Select(pair => GetSnapPointValue(pair.Value.Left, pair.Value.Width, snapPointsAlignment))
+                    .Distinct()
+                    .ToList();
         }
 
         public override double GetRegularSnapPoints(Orientation orientation, SnapPointsAlignment snapPointsAlignment, out double offset)
         {
-            throw new NotImplementedException();
+            offset = 0;
+            return 0;
         }
     }
 }

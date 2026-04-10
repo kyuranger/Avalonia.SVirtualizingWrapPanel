@@ -55,8 +55,8 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
             set { SetValue(ColumnSpacingProperty, value); }
         }
 
-        public override bool AreHorizontalSnapPointsRegular { get; set; } = false;
-        public override bool AreVerticalSnapPointsRegular { get; set; } = false;
+        public override bool AreHorizontalSnapPointsRegular { get => Columns > 0 && Bounds.Width > 0; set { } }
+        public override bool AreVerticalSnapPointsRegular { get => !double.IsPositiveInfinity(RowHeight) && RowHeight > 0; set { } }
 
         public override event EventHandler<RoutedEventArgs>? HorizontalSnapPointsChanged;
         public override event EventHandler<RoutedEventArgs>? VerticalSnapPointsChanged;
@@ -66,6 +66,27 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
             EffectiveViewportChanged += SVirtualizingUniformGrid_EffectiveViewportChanged;
         }
         Boolean _isLoadRendered = false;
+
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
+            base.OnPropertyChanged(change);
+
+            if (change.Property == BoundsProperty ||
+                change.Property == ColumnsProperty ||
+                change.Property == ColumnSpacingProperty)
+            {
+                HorizontalSnapPointsChanged?.Invoke(this, CreateSnapPointsChangedEventArgs());
+            }
+
+            if (change.Property == BoundsProperty ||
+                change.Property == ColumnsProperty ||
+                change.Property == RowHeightProperty ||
+                change.Property == RowSpacingProperty)
+            {
+                VerticalSnapPointsChanged?.Invoke(this, CreateSnapPointsChangedEventArgs());
+            }
+        }
+
         protected override void OnLoaded(RoutedEventArgs e)
         {
             base.OnLoaded(e);
@@ -420,6 +441,8 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
             }
             base.OnItemsChanged(items, e);
             RenderElements(_currentIndex);
+            HorizontalSnapPointsChanged?.Invoke(this, CreateSnapPointsChangedEventArgs());
+            VerticalSnapPointsChanged?.Invoke(this, CreateSnapPointsChangedEventArgs());
         }
 
 
@@ -542,12 +565,57 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
 
         public override IReadOnlyList<double> GetIrregularSnapPoints(Orientation orientation, SnapPointsAlignment snapPointsAlignment)
         {
-            return new List<double>();
+            if (orientation == Orientation.Vertical)
+            {
+                if (!double.IsPositiveInfinity(RowHeight))
+                {
+                    return Array.Empty<double>();
+                }
+
+                return _elementDictionary
+                    .Values
+                    .GroupBy(element => element.Top)
+                    .OrderBy(group => group.Key)
+                    .Select(group => GetSnapPointValue(group.Key, group.Max(element => element.Height), snapPointsAlignment))
+                    .ToList();
+            }
+
+            if (Columns <= 0 || Bounds.Width <= 0)
+            {
+                return Array.Empty<double>();
+            }
+
+            return Array.Empty<double>();
         }
 
         public override double GetRegularSnapPoints(Orientation orientation, SnapPointsAlignment snapPointsAlignment, out double offset)
         {
-            throw new NotImplementedException();
+            offset = 0;
+
+            if (Columns <= 0 || Bounds.Width <= 0)
+            {
+                return 0;
+            }
+
+            var itemWidth = (Bounds.Width - (Columns - 1) * ColumnSpacing) / Columns;
+            if (itemWidth <= 0)
+            {
+                return 0;
+            }
+
+            if (orientation == Orientation.Horizontal)
+            {
+                offset = GetSnapPointValue(0, itemWidth, snapPointsAlignment);
+                return itemWidth + ColumnSpacing;
+            }
+
+            if (!double.IsPositiveInfinity(RowHeight) && RowHeight > 0)
+            {
+                offset = GetSnapPointValue(0, RowHeight, snapPointsAlignment);
+                return RowHeight + RowSpacing;
+            }
+
+            return 0;
         }
     }
 }

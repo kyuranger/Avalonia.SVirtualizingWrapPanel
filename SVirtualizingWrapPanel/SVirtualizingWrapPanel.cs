@@ -19,8 +19,8 @@ namespace SVirtualizingWrapPanel
 {
     public sealed class SVirtualizingWrapPanel : SVirtualizingPanel
     {
-        public override bool AreHorizontalSnapPointsRegular { get; set; } = false;
-        public override bool AreVerticalSnapPointsRegular { get; set; } = false;
+        public override bool AreHorizontalSnapPointsRegular { get => false; set { } }
+        public override bool AreVerticalSnapPointsRegular { get => false; set { } }
 
         public override event EventHandler<RoutedEventArgs>? HorizontalSnapPointsChanged;
         public override event EventHandler<RoutedEventArgs>? VerticalSnapPointsChanged;
@@ -30,6 +30,18 @@ namespace SVirtualizingWrapPanel
             this.EffectiveViewportChanged += VirtualizingWrapPanel_EffectiveViewportChanged;
         }
         Boolean _isLoadRendered = false;
+
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
+            base.OnPropertyChanged(change);
+
+            if (change.Property == BoundsProperty)
+            {
+                HorizontalSnapPointsChanged?.Invoke(this, CreateSnapPointsChangedEventArgs());
+                VerticalSnapPointsChanged?.Invoke(this, CreateSnapPointsChangedEventArgs());
+            }
+        }
+
         protected override void OnLoaded(RoutedEventArgs e)
         {
             base.OnLoaded(e);
@@ -306,6 +318,8 @@ namespace SVirtualizingWrapPanel
             }
             base.OnItemsChanged(items, e);
             RenderElements(_currentIndex);
+            HorizontalSnapPointsChanged?.Invoke(this, CreateSnapPointsChangedEventArgs());
+            VerticalSnapPointsChanged?.Invoke(this, CreateSnapPointsChangedEventArgs());
         }
 
 
@@ -428,12 +442,28 @@ namespace SVirtualizingWrapPanel
 
         public override IReadOnlyList<double> GetIrregularSnapPoints(Orientation orientation, SnapPointsAlignment snapPointsAlignment)
         {
-            return new List<double>();
+            if (_elementDictionary.Count == 0)
+            {
+                return Array.Empty<double>();
+            }
+
+            return orientation == Orientation.Vertical
+                ? _elementDictionary.Values
+                    .GroupBy(element => element.Top)
+                    .OrderBy(group => group.Key)
+                    .Select(group => GetSnapPointValue(group.Key, group.Max(element => element.Height), snapPointsAlignment))
+                    .ToList()
+                : _elementDictionary.Values
+                    .GroupBy(element => element.Left)
+                    .OrderBy(group => group.Key)
+                    .Select(group => GetSnapPointValue(group.Key, group.Max(element => element.Width), snapPointsAlignment))
+                    .ToList();
         }
 
         public override double GetRegularSnapPoints(Orientation orientation, SnapPointsAlignment snapPointsAlignment, out double offset)
         {
-            throw new NotImplementedException();
+            offset = 0;
+            return 0;
         }
 
         private int GetScrollIntoViewStartIndex(int index)
