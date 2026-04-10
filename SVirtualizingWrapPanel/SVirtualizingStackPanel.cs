@@ -182,28 +182,7 @@ namespace SVirtualizingWrapPanel
             _lastIndex = RenderElements(_startIndex);
             //Debug.WriteLine("lastIndex:" + _lastIndex);
             #endregion
-            #region//回收其他元素
-            for (int i = 0; i < Items.Count; i++)
-            {
-                if (i < _startIndex || i > _lastIndex)
-                {
-                    if (_elementDictionary.TryGetValue(i, out var _element))
-                    {
-                        if (_element.Control is { } && ItemContainerGenerator is { })
-                        {
-                            RemoveInternalChild(_element.Control);
-                            ItemContainerGenerator.ClearItemContainer(_element.Control);
-                            _element.Control = null;
-                            _element.IsRendered = false;
-                            //Debug.WriteLine($"回收{i}");
-                        }
-                    }
-                }
-            }
-            #endregion
-            InvalidateMeasure();
-            InvalidateArrange();
-
+            ClearElementsOutsideRange(_startIndex, _lastIndex);
         }
 
 
@@ -234,7 +213,7 @@ namespace SVirtualizingWrapPanel
                         Control? _element = null;
                         if (!_elementDictionary.TryGetValue(i, out var _value))
                         {
-                            _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
+                            _element = CreateVirtualizingElement(_item, i);
                             var _newValue = new ElementRenderModel();
                             _newValue.Top = _currentLineHeight;
                             _newValue.Left = 0;
@@ -259,7 +238,7 @@ namespace SVirtualizingWrapPanel
                             }
                             else
                             {
-                                _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
+                                _element = CreateVirtualizingElement(_item, i);
                                 _value.Top = _currentLineHeight;
                                 _value.Left = 0;
                                 _currentLineHeight += _element.DesiredSize.Height;
@@ -299,7 +278,7 @@ namespace SVirtualizingWrapPanel
                         Control? _element = null;
                         if (!_elementDictionary.TryGetValue(i, out var _value))
                         {
-                            _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
+                            _element = CreateVirtualizingElement(_item, i);
                             var _newValue = new ElementRenderModel();
                             _newValue.Top = 0;
                             _newValue.Left = _currentLineWidth;
@@ -325,7 +304,7 @@ namespace SVirtualizingWrapPanel
                             }
                             else
                             {
-                                _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
+                                _element = CreateVirtualizingElement(_item, i);
                                 _value.Top = 0;
                                 _value.Left = _currentLineWidth;
                                 _value.Width = _element.DesiredSize.Width;
@@ -345,12 +324,6 @@ namespace SVirtualizingWrapPanel
                 }
                 _panelSize = new Size(_currentLineWidth, _effectiveViewport.Height);
             }
-            #region//正式Measure自身
-            InvalidateMeasure();
-            #endregion
-            #region//正式Arrange自身
-            InvalidateArrange();
-            #endregion
             return _endIndex;
         }
         protected override Size MeasureOverride(Size availableSize)

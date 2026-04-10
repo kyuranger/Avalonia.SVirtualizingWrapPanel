@@ -1,4 +1,4 @@
-ï»¿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Generators;
 using Avalonia.Controls.Primitives;
@@ -62,7 +62,7 @@ namespace SVirtualizingWrapPanel
             {
                 _effectiveViewport = e.EffectiveViewport;
                 //Debug.WriteLine($"Top:{_EffectiveViewport.Top}");
-                #region//è·å–è¿›å…¥æ¸²æŸ“ä½ç½®çš„ç¬¬ä¸€ä¸ªindex
+                #region//»ñÈ¡½øÈëäÖÈ¾Î»ÖÃµÄµÚÒ»¸öindex
                 var viewportStart = GetVerticalViewportStart();
                 var _firstIndex = 0;
                 for (int i = 0; i < Items.Count; i++)
@@ -78,7 +78,7 @@ namespace SVirtualizingWrapPanel
                 }
                 //Debug.WriteLine("firstIndex:" + _firstIndex);
                 #endregion
-                #region//è·å–è¯¥è¿›è¡Œæ¸²æŸ“çš„ç¬¬ä¸€ä¸ªindex
+                #region//»ñÈ¡¸Ã½øĞĞäÖÈ¾µÄµÚÒ»¸öindex
                 var _startIndex = 0;
                 for (int i = _firstIndex; i >= 0; i--)
                 {
@@ -94,11 +94,11 @@ namespace SVirtualizingWrapPanel
                 _currentIndex = _startIndex;
                 //Debug.WriteLine("startIndex:" + _startIndex);
                 #endregion
-                #region//æ­£å¼æ¸²æŸ“                               
+                #region//ÕıÊ½äÖÈ¾                               
                 _lastIndex = RenderElements(_startIndex);
                 //Debug.WriteLine("lastIndex:" + _LastIndex);
                 #endregion
-                #region//å›æ”¶å…¶ä»–å…ƒç´ 
+                #region//»ØÊÕÆäËûÔªËØ
                 for (int i = 0; i < Items.Count; i++)
                 {
                     if (i < _startIndex || i > _lastIndex)
@@ -111,7 +111,7 @@ namespace SVirtualizingWrapPanel
                                 ItemContainerGenerator.ClearItemContainer(_element.Control);
                                 _element.Control = null;
                                 _element.IsRendered = false;
-                                //Debug.WriteLine($"å›æ”¶{i}");
+                                //Debug.WriteLine($"»ØÊÕ{i}");
                             }
                         }
                     }
@@ -154,7 +154,7 @@ namespace SVirtualizingWrapPanel
                 _currentLineHeight = 0;
             }
             _currentLineWidth = 0;
-            #region//å…ˆè®¡ç®—éœ€æ¸²æŸ“çš„æ¯ä¸ªæ§ä»¶æ‰€éœ€çš„ç©ºé—´          
+            #region//ÏÈ¼ÆËãĞèäÖÈ¾µÄÃ¿¸ö¿Ø¼şËùĞèµÄ¿Õ¼ä          
             for (int i = startIndex; i < Items.Count; i++)
             {
                 var _item = Items[i];
@@ -163,7 +163,7 @@ namespace SVirtualizingWrapPanel
                     Control? _element = null;
                     if (!_elementDictionary.TryGetValue(i, out var _value))
                     {
-                        _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
+                        _element = CreateVirtualizingElement(_item, i);
                         var _newValue = new ElementRenderModel();
                         if (_currentLineWidth + _element.DesiredSize.Width > _maxLineWidth)
                         {
@@ -218,7 +218,7 @@ namespace SVirtualizingWrapPanel
                         }
                         else
                         {
-                            _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
+                            _element = CreateVirtualizingElement(_item, i);
                             if (_currentLineWidth + _element.DesiredSize.Width > _maxLineWidth)
                             {
                                 _currentLineHeight += _maxLineHeight;
@@ -253,10 +253,10 @@ namespace SVirtualizingWrapPanel
             #endregion
 
             _panelSize = new Size(_effectiveViewport.Width, _currentLineHeight + _maxLineHeight);
-            #region//æ­£å¼Measureè‡ªèº«
+            #region//ÕıÊ½Measure×ÔÉí
             InvalidateMeasure();
             #endregion
-            #region//æ­£å¼Arrangeè‡ªèº«
+            #region//ÕıÊ½Arrange×ÔÉí
             InvalidateArrange();
             #endregion                     
             return _endIndex;

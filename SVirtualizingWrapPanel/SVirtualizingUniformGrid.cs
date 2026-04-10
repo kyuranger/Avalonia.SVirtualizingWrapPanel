@@ -144,27 +144,7 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
                 _lastIndex = RenderElements(_startIndex);
                 //Debug.WriteLine("lastIndex:" + _LastIndex);
                 #endregion
-                #region//回收其他元素
-                for (int i = 0; i < Items.Count; i++)
-                {
-                    if (i < _startIndex || i > _lastIndex)
-                    {
-                        if (_elementDictionary.TryGetValue(i, out var _element))
-                        {
-                            if (_element.Control is { } && ItemContainerGenerator is { })
-                            {
-                                RemoveInternalChild(_element.Control);
-                                ItemContainerGenerator.ClearItemContainer(_element.Control);
-                                _element.Control = null;
-                                _element.IsRendered = false;
-                                //Debug.WriteLine($"回收{i}");
-                            }
-                        }
-                    }
-                }
-                #endregion
-                InvalidateMeasure();
-                InvalidateArrange();
+                ClearElementsOutsideRange(_startIndex, _lastIndex);
                 ScrollToLoadMore();
                 _isLoadRendered = true;
             }
@@ -239,7 +219,7 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
                         Control? _element = null;
                     if (!_elementDictionary.TryGetValue(i, out var _value))
                     {
-                        _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
+                        _element = CreateVirtualizingElement(_item, i);
                         var _newValue = new ElementRenderModel();
                         CalculatingItemPosition(ref _maxLineHeight, ref _lineIndex, i, _newValue, _elementWidth, _element.DesiredSize.Height, _element.DesiredSize.Height);
 
@@ -257,7 +237,7 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
                         }
                         else
                         {
-                            _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
+                            _element = CreateVirtualizingElement(_item, i);
                             CalculatingItemPosition(ref _maxLineHeight, ref _lineIndex, i, _value, _elementWidth, _element.DesiredSize.Height, _element.DesiredSize.Height);
                             _value.Control = _element;
                             _value.IsRendered = true;
@@ -281,7 +261,7 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
                         Control? _element = null;
                     if (!_elementDictionary.TryGetValue(i, out var _value))
                     {
-                        _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
+                        _element = CreateVirtualizingElement(_item, i);
                         var _newValue = new ElementRenderModel();
                         CalculatingItemPosition(ref _maxLineHeight, ref _lineIndex, i, _newValue, _elementWidth, RowHeight, RowHeight);
 
@@ -299,7 +279,7 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
                         }
                         else
                         {
-                            _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
+                            _element = CreateVirtualizingElement(_item, i);
                             CalculatingItemPosition(ref _maxLineHeight, ref _lineIndex, i, _value, _elementWidth, RowHeight, RowHeight);
                             _value.Control = _element;
                             _value.IsRendered = true;
@@ -316,12 +296,6 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
             #endregion
 
             _panelSize = new Size(Bounds.Width, CalculatePanelHeight(_currentLineHeight + _maxLineHeight));
-            #region//正式Measure自身
-            InvalidateMeasure();
-            #endregion
-            #region//正式Arrange自身
-            InvalidateArrange();
-            #endregion                     
             return _endIndex;
         }
 

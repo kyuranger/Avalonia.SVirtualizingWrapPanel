@@ -54,6 +54,7 @@ AvaloniaProperty.Register<SVirtualizingPanel, Boolean>(nameof(IsReachEnd));
 
         protected int _currentIndex = 0;
         protected int _lastIndex = 0;
+        private const string DefaultRecycleKey = "SVirtualizingPanel";
 
         protected abstract void ScrollToLoadMore();
         protected void OnLoadMore()
@@ -112,7 +113,15 @@ AvaloniaProperty.Register<SVirtualizingPanel, Boolean>(nameof(IsReachEnd));
                 return;
             }
 
-            var keysToRemove = _elementDictionary.Keys.Where(key => key >= startIndex).OrderBy(key => key).ToList();
+            var keysToRemove = new List<int>();
+            foreach (var key in _elementDictionary.Keys)
+            {
+                if (key >= startIndex)
+                {
+                    keysToRemove.Add(key);
+                }
+            }
+
             foreach (var key in keysToRemove)
             {
                 if (_elementDictionary.TryGetValue(key, out var element))
@@ -125,6 +134,34 @@ AvaloniaProperty.Register<SVirtualizingPanel, Boolean>(nameof(IsReachEnd));
                 }
 
                 _elementDictionary.Remove(key);
+            }
+        }
+
+        protected void ClearElementsOutsideRange(int startIndex, int endIndex)
+        {
+            if (_elementDictionary.Count == 0)
+            {
+                return;
+            }
+
+            var keysToRemove = new List<int>();
+            foreach (var key in _elementDictionary.Keys)
+            {
+                if (key < startIndex || key > endIndex)
+                {
+                    keysToRemove.Add(key);
+                }
+            }
+
+            foreach (var key in keysToRemove)
+            {
+                if (_elementDictionary.TryGetValue(key, out var element) && element.Control is { } control)
+                {
+                    RemoveInternalChild(control);
+                    ItemContainerGenerator?.ClearItemContainer(control);
+                    element.Control = null;
+                    element.IsRendered = false;
+                }
             }
         }
 
@@ -163,7 +200,7 @@ AvaloniaProperty.Register<SVirtualizingPanel, Boolean>(nameof(IsReachEnd));
             return new RoutedEventArgs();
         }
 
-        protected Control CreateVirtualizingElement(object item, int index, string recycleKey)
+        protected Control CreateVirtualizingElement(object item, int index, string recycleKey = DefaultRecycleKey)
         {
             var _generator = ItemContainerGenerator!;
             var _container = _generator.CreateContainer(item, index, recycleKey);
