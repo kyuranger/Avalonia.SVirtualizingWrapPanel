@@ -16,6 +16,7 @@ namespace SVirtualizingWrapPanel
 {
     public abstract class SVirtualizingPanel : VirtualizingPanel, IScrollSnapPointsInfo
     {
+
         public static readonly StyledProperty<ICommand?> LoadMoreProperty =
   AvaloniaProperty.Register<SVirtualizingPanel, ICommand?>(nameof(LoadMore));
 
@@ -48,11 +49,11 @@ AvaloniaProperty.Register<SVirtualizingPanel, Boolean>(nameof(IsReachEnd));
 
         public abstract IReadOnlyList<double> GetIrregularSnapPoints(Orientation orientation, SnapPointsAlignment snapPointsAlignment);
         public abstract double GetRegularSnapPoints(Orientation orientation, SnapPointsAlignment snapPointsAlignment, out double offset);
-        
-        public Boolean IsLoadingMore { get; protected set; } = false;        
-    
-        protected int _CurrentIndex = 0;
-        protected int _LastIndex = 0;
+
+        public Boolean IsLoadingMore { get; protected set; } = false;
+
+        protected int _currentIndex = 0;
+        protected int _lastIndex = 0;
 
         protected abstract void ScrollToLoadMore();
         protected void OnLoadMore()
@@ -65,7 +66,7 @@ AvaloniaProperty.Register<SVirtualizingPanel, Boolean>(nameof(IsReachEnd));
             {
                 LoadMore?.Execute(null);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // 可以加日志记录
             }
@@ -73,10 +74,10 @@ AvaloniaProperty.Register<SVirtualizingPanel, Boolean>(nameof(IsReachEnd));
             {
                 IsLoadingMore = false;
             }
-        }        
+        }
         protected class ElementRenderModel
         {
-            public Control? Control { get; set; } = null;         
+            public Control? Control { get; set; } = null;
             public double Left { get; set; } = 0;
             public double Top { get; set; } = 0;
 
@@ -86,16 +87,66 @@ AvaloniaProperty.Register<SVirtualizingPanel, Boolean>(nameof(IsReachEnd));
             public Boolean IsRendered { get; set; } = false;
 
         }
-        protected Dictionary<int, ElementRenderModel> _ElementDictionary = new Dictionary<int, ElementRenderModel>();
-        protected Rect _EffectiveViewport = new Rect(0, -1, 0, 0);
-        protected double _MaximumItemHeight = 0.0;
-        protected double _MaximumItemWidth = 0.0;
-        protected Size _PanelSize = new Size();
-        protected double _CurrentLineWidth = 0;
-        protected double _CurrentLineHeight = 0;
+        protected Dictionary<int, ElementRenderModel> _elementDictionary = new Dictionary<int, ElementRenderModel>();
+        protected Rect _effectiveViewport = new Rect(0, -1, 0, 0);
+        protected double _maximumItemHeight = 0.0;
+        protected double _maximumItemWidth = 0.0;
+        protected Size _panelSize = new Size();
+        protected double _currentLineWidth = 0;
+        protected double _currentLineHeight = 0;
+        protected const double VirtualizationCacheLength = 300;
 
         protected abstract int RenderElements(int startIndex);
         //protected abstract Boolean IsMeasureFinished(Control control);
+
+        protected void UpdateMaximumElementSize(Size desiredSize)
+        {
+            _maximumItemWidth = Math.Max(_maximumItemWidth, desiredSize.Width);
+            _maximumItemHeight = Math.Max(_maximumItemHeight, desiredSize.Height);
+        }
+
+        protected void ClearElementRange(int startIndex)
+        {
+            if (_elementDictionary.Count == 0)
+            {
+                return;
+            }
+
+            var keysToRemove = _elementDictionary.Keys.Where(key => key >= startIndex).OrderBy(key => key).ToList();
+            foreach (var key in keysToRemove)
+            {
+                if (_elementDictionary.TryGetValue(key, out var element))
+                {
+                    if (element.Control is { } control)
+                    {
+                        RemoveInternalChild(control);
+                        ItemContainerGenerator?.ClearItemContainer(control);
+                    }
+                }
+
+                _elementDictionary.Remove(key);
+            }
+        }
+
+        protected double GetVerticalViewportStart()
+        {
+            return Math.Max(0, _effectiveViewport.Top - Math.Max(VirtualizationCacheLength, _maximumItemHeight));
+        }
+
+        protected double GetVerticalViewportEnd()
+        {
+            return _effectiveViewport.Top + _effectiveViewport.Height + Math.Max(VirtualizationCacheLength, _maximumItemHeight);
+        }
+
+        protected double GetHorizontalViewportStart()
+        {
+            return Math.Max(0, _effectiveViewport.Left - Math.Max(VirtualizationCacheLength, _maximumItemWidth));
+        }
+
+        protected double GetHorizontalViewportEnd()
+        {
+            return _effectiveViewport.Left + _effectiveViewport.Width + Math.Max(VirtualizationCacheLength, _maximumItemWidth);
+        }
 
         protected Control CreateVirtualizingElement(object item, int index, string recycleKey)
         {
@@ -106,8 +157,9 @@ AvaloniaProperty.Register<SVirtualizingPanel, Boolean>(nameof(IsReachEnd));
             _generator.ItemContainerPrepared(_container, item, index);
 
             _container.Measure(Size.Infinity);
+            UpdateMaximumElementSize(_container.DesiredSize);
             return _container;
         }
-
     }
+
 }

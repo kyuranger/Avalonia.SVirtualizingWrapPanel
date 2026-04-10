@@ -18,7 +18,7 @@ namespace SVirtualizingWrapPanel
 {
     public class SVirtualizingUniformGrid : SVirtualizingPanel
     {
-        
+
         public static readonly StyledProperty<int> ColumnsProperty =
   AvaloniaProperty.Register<SVirtualizingUniformGrid, int>(nameof(Columns), 0);
 
@@ -63,28 +63,38 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
 
         public SVirtualizingUniformGrid()
         {
-            this.EffectiveViewportChanged += SVirtualizingUniformGrid_EffectiveViewportChanged; ;
+            EffectiveViewportChanged += SVirtualizingUniformGrid_EffectiveViewportChanged;
+        }
+        Boolean _isLoadRendered = false;
+        protected override void OnLoaded(RoutedEventArgs e)
+        {
+            base.OnLoaded(e);
+            if (!_isLoadRendered)
+            {
+                RenderElements(_currentIndex);
+            }
         }
 
-        private void SVirtualizingUniformGrid_EffectiveViewportChanged(object? sender, Avalonia.Layout.EffectiveViewportChangedEventArgs e)
+        private void SVirtualizingUniformGrid_EffectiveViewportChanged(object? sender, EffectiveViewportChangedEventArgs e)
         {
             //Debug.WriteLine(e.EffectiveViewport.Height);
             //Debug.WriteLine(e.EffectiveViewport.Top);            
-            if (e.EffectiveViewport.Top == -1)
+            if (e.EffectiveViewport.Top == -1 || e.EffectiveViewport.Width == 0 || e.EffectiveViewport.Height == 0)
             {
                 return;
             }
-            if (e.EffectiveViewport.Top != _EffectiveViewport.Top || e.EffectiveViewport.Width != _EffectiveViewport.Width || e.EffectiveViewport.Height != _EffectiveViewport.Height)
+            if (e.EffectiveViewport.Top != _effectiveViewport.Top || e.EffectiveViewport.Width != _effectiveViewport.Width || e.EffectiveViewport.Height != _effectiveViewport.Height)
             {
-                _EffectiveViewport = e.EffectiveViewport;
+                _effectiveViewport = e.EffectiveViewport;
                 //Debug.WriteLine($"Top:{_EffectiveViewport.Top}");
                 #region//获取进入渲染位置的第一个index
+                var viewportStart = GetVerticalViewportStart();
                 var _firstIndex = 0;
                 for (int i = 0; i < Items.Count; i++)
                 {
-                    if (_ElementDictionary.TryGetValue(i, out var _element))
+                    if (_elementDictionary.TryGetValue(i, out var _element))
                     {
-                        if (_element.Top + _element.Height > _EffectiveViewport.Top || _element.Top + _MaximumItemHeight > _EffectiveViewport.Top)
+                        if (_element.Top + _element.Height > viewportStart || _element.Top + _maximumItemHeight > viewportStart)
                         {
                             _firstIndex = i;
                             break;
@@ -97,7 +107,7 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
                 var _startIndex = 0;
                 for (int i = _firstIndex; i >= 0; i--)
                 {
-                    if (_ElementDictionary.TryGetValue(i, out var _element))
+                    if (_elementDictionary.TryGetValue(i, out var _element))
                     {
                         if (_element.Left == 0)
                         {
@@ -106,19 +116,19 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
                         }
                     }
                 }
-                _CurrentIndex = _startIndex;
+                _currentIndex = _startIndex;
                 //Debug.WriteLine("startIndex:" + _startIndex);
                 #endregion
                 #region//正式渲染                               
-                _LastIndex = RenderElements(_startIndex);
+                _lastIndex = RenderElements(_startIndex);
                 //Debug.WriteLine("lastIndex:" + _LastIndex);
                 #endregion
                 #region//回收其他元素
                 for (int i = 0; i < Items.Count; i++)
                 {
-                    if (i < _startIndex || i > _LastIndex)
+                    if (i < _startIndex || i > _lastIndex)
                     {
-                        if (_ElementDictionary.TryGetValue(i, out var _element))
+                        if (_elementDictionary.TryGetValue(i, out var _element))
                         {
                             if (_element.Control is { } && ItemContainerGenerator is { })
                             {
@@ -135,16 +145,28 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
                 InvalidateMeasure();
                 InvalidateArrange();
                 ScrollToLoadMore();
+                _isLoadRendered = true;
             }
             else
             {
-                _EffectiveViewport = e.EffectiveViewport;
+                _effectiveViewport = e.EffectiveViewport;
             }
         }
-       
+
         protected override void ScrollToLoadMore()
         {
-            if (_EffectiveViewport.Top + _EffectiveViewport.Height >= _PanelSize.Height - 300)
+            if (Items.Count == 0)
+            {
+                OnLoadMore();
+                return;
+            }
+
+            if (_effectiveViewport.Top < 0 || _effectiveViewport.Width <= 0 || _effectiveViewport.Height <= 0 || _panelSize.Height <= 0)
+            {
+                return;
+            }
+
+            if (_effectiveViewport.Top + _effectiveViewport.Height >= _panelSize.Height - 300)
             {
                 OnLoadMore();
             }
@@ -159,22 +181,32 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
             {
                 return 0;
             }
-            var _elementWidth = (this.Bounds.Width - (Columns - 1) * ColumnSpacing) / Columns;
+            var _elementWidth = (Bounds.Width - (Columns - 1) * ColumnSpacing) / Columns;
             var _lineIndex = 0;
             var _endIndex = Items.Count - 1;
             var _index = startIndex;
             //Debug.WriteLine("_maxLineWidth" + _maxLineWidth);
-            double _maxLineWidth = this.Bounds.Width;
+            double _maxLineWidth = Bounds.Width;
             double _maxLineHeight = 0.0;
-            if (_ElementDictionary.TryGetValue(_index, out var _firstElement))
+            if (!double.IsPositiveInfinity(RowHeight))
             {
-                _CurrentLineHeight = _firstElement.Top;
+                var rowIndex = startIndex / Columns;
+                var columnIndex = startIndex % Columns;
+                _currentLineHeight = rowIndex * (RowHeight + RowSpacing);
+                _currentLineWidth = columnIndex == 0 ? 0 : columnIndex * (_elementWidth + ColumnSpacing);
+                _lineIndex = columnIndex;
+                _maxLineHeight = RowHeight;
+            }
+            else if (_elementDictionary.TryGetValue(_index, out var _firstElement))
+            {
+                _currentLineHeight = _firstElement.Top;
+                _currentLineWidth = _firstElement.Left;
             }
             else
             {
-                _CurrentLineHeight = 0;
+                _currentLineHeight = 0;
+                _currentLineWidth = 0;
             }
-            _CurrentLineWidth = 0;
             #region//先计算需渲染的每个控件所需的空间          
             if (double.IsPositiveInfinity(RowHeight))
             {
@@ -184,37 +216,33 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
                     if (_item is { })
                     {
                         Control? _element = null;
-                        if (!_ElementDictionary.TryGetValue(i, out var _value))
-                        {
-                            _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
-                            _maxLineHeight = Math.Max(_maxLineHeight, _element.DesiredSize.Height);
-                            var _newValue = new ElementRenderModel();
+                    if (!_elementDictionary.TryGetValue(i, out var _value))
+                    {
+                        _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
+                        var _newValue = new ElementRenderModel();
+                        CalculatingItemPosition(ref _maxLineHeight, ref _lineIndex, i, _newValue, _elementWidth, _element.DesiredSize.Height, _element.DesiredSize.Height);
 
-                            CalculatingItemPosition(ref _maxLineHeight, ref _lineIndex, i, _newValue, _elementWidth, _element.DesiredSize.Height);
+                        _newValue.Control = _element;
+                        _newValue.IsRendered = true;
 
-                            _newValue.Control = _element;
-                            _newValue.IsRendered = true;
-
-                            _ElementDictionary.Add(i, _newValue);
+                            _elementDictionary.Add(i, _newValue);
                         }
                         else
                         {
-                            _element = _value.Control;
-                            if (_element is { })
-                            {
-                                _maxLineHeight = Math.Max(_maxLineHeight, _element.DesiredSize.Height);
-                                CalculatingItemPosition(ref _maxLineHeight, ref _lineIndex, i, _value, _elementWidth, _element.DesiredSize.Height);
-                            }
-                            else
-                            {
-                                _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
-                                _maxLineHeight = Math.Max(_maxLineHeight, _element.DesiredSize.Height);
-                                CalculatingItemPosition(ref _maxLineHeight, ref _lineIndex, i, _value, _elementWidth, _element.DesiredSize.Height);
-                                _value.Control = _element;
-                                _value.IsRendered = true;
-                            }
+                        _element = _value.Control;
+                        if (_element is { })
+                        {
+                            CalculatingItemPosition(ref _maxLineHeight, ref _lineIndex, i, _value, _elementWidth, _element.DesiredSize.Height, _element.DesiredSize.Height);
                         }
-                        if (_CurrentLineHeight > _EffectiveViewport.Top + _EffectiveViewport.Height)
+                        else
+                        {
+                            _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
+                            CalculatingItemPosition(ref _maxLineHeight, ref _lineIndex, i, _value, _elementWidth, _element.DesiredSize.Height, _element.DesiredSize.Height);
+                            _value.Control = _element;
+                            _value.IsRendered = true;
+                        }
+                        }
+                        if (_effectiveViewport.Top >= 0 && _currentLineHeight > GetVerticalViewportEnd())
                         {
                             _endIndex = i;
                             break;
@@ -230,37 +258,33 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
                     if (_item is { })
                     {
                         Control? _element = null;
-                        if (!_ElementDictionary.TryGetValue(i, out var _value))
-                        {
-                            _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
-                            _maxLineHeight = RowHeight;
-                            var _newValue = new ElementRenderModel();
+                    if (!_elementDictionary.TryGetValue(i, out var _value))
+                    {
+                        _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
+                        var _newValue = new ElementRenderModel();
+                        CalculatingItemPosition(ref _maxLineHeight, ref _lineIndex, i, _newValue, _elementWidth, RowHeight, RowHeight);
 
-                            CalculatingItemPosition(ref _maxLineHeight, ref _lineIndex, i, _newValue, _elementWidth, RowHeight);
+                        _newValue.Control = _element;
+                        _newValue.IsRendered = true;
 
-                            _newValue.Control = _element;
-                            _newValue.IsRendered = true;
-
-                            _ElementDictionary.Add(i, _newValue);
+                            _elementDictionary.Add(i, _newValue);
                         }
                         else
                         {
-                            _element = _value.Control;
-                            if (_element is { })
-                            {
-                                _maxLineHeight = RowHeight;
-                                CalculatingItemPosition(ref _maxLineHeight, ref _lineIndex, i, _value, _elementWidth, RowHeight);
-                            }
-                            else
-                            {
-                                _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
-                                _maxLineHeight = RowHeight;
-                                CalculatingItemPosition(ref _maxLineHeight, ref _lineIndex, i, _value, _elementWidth, RowHeight);
-                                _value.Control = _element;
-                                _value.IsRendered = true;
-                            }
+                        _element = _value.Control;
+                        if (_element is { })
+                        {
+                            CalculatingItemPosition(ref _maxLineHeight, ref _lineIndex, i, _value, _elementWidth, RowHeight, RowHeight);
                         }
-                        if (_CurrentLineHeight > _EffectiveViewport.Top + _EffectiveViewport.Height)
+                        else
+                        {
+                            _element = CreateVirtualizingElement(_item, i, Guid.NewGuid().ToString());
+                            CalculatingItemPosition(ref _maxLineHeight, ref _lineIndex, i, _value, _elementWidth, RowHeight, RowHeight);
+                            _value.Control = _element;
+                            _value.IsRendered = true;
+                        }
+                        }
+                        if (_effectiveViewport.Top >= 0 && _currentLineHeight > GetVerticalViewportEnd())
                         {
                             _endIndex = i;
                             break;
@@ -270,7 +294,7 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
             }
             #endregion
 
-            _PanelSize = new Size(_EffectiveViewport.Width, _CurrentLineHeight + _maxLineHeight);
+            _panelSize = new Size(Bounds.Width, CalculatePanelHeight(_currentLineHeight + _maxLineHeight));
             #region//正式Measure自身
             InvalidateMeasure();
             #endregion
@@ -281,38 +305,67 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
         }
 
 
-        void CalculatingItemPosition(ref double maxLineHeight, ref int lineIndex, int index, ElementRenderModel value, double width, double height)
+        void CalculatingItemPosition(ref double maxLineHeight, ref int lineIndex, int index, ElementRenderModel value, double width, double height, double desiredHeight)
         {
             if (lineIndex == Columns)
             {
                 lineIndex = 0;
-                _CurrentLineHeight += maxLineHeight + RowSpacing;
-                _CurrentLineWidth = 0;
-                if (index != Items.Count - 1)
-                {
-                    maxLineHeight = 0;
-                }
-                value.Top = _CurrentLineHeight;
+                _currentLineHeight += maxLineHeight + RowSpacing;
+                _currentLineWidth = 0;
+                maxLineHeight = 0;
+                value.Top = _currentLineHeight;
                 value.Left = 0;
                 value.Width = width;
                 value.Height = height;
-                lineIndex =1;
-                _CurrentLineWidth += width + ColumnSpacing;
+                lineIndex = 1;
+                _currentLineWidth += width + ColumnSpacing;
             }
             else
             {
-                value.Top = _CurrentLineHeight;
-                value.Left = lineIndex == 0 ? 0 : _CurrentLineWidth;
+                value.Top = _currentLineHeight;
+                value.Left = lineIndex == 0 ? 0 : _currentLineWidth;
                 value.Width = width;
                 value.Height = height;
-                _CurrentLineWidth += width + ColumnSpacing;
+                _currentLineWidth += width + ColumnSpacing;
                 lineIndex++;
             }
+
+            maxLineHeight = Math.Max(maxLineHeight, desiredHeight);
             value.IsRendered = true;
+        }
+
+        double CalculatePanelHeight(double renderedBottom)
+        {
+            if (Items.Count == 0 || Columns <= 0)
+            {
+                return 0;
+            }
+
+            if (!double.IsPositiveInfinity(RowHeight))
+            {
+                var rowCount = (int)Math.Ceiling((double)Items.Count / Columns);
+                if (rowCount <= 0)
+                {
+                    return 0;
+                }
+
+                return rowCount * RowHeight + Math.Max(0, rowCount - 1) * RowSpacing;
+            }
+
+            var realizedBottom = _elementDictionary.Count == 0
+                ? renderedBottom
+                : _elementDictionary.Values.Max(element => element.Top + element.Height);
+
+            var realizedRowCount = (int)Math.Ceiling((double)Math.Max(1, _elementDictionary.Count) / Columns);
+            var totalRowCount = (int)Math.Ceiling((double)Items.Count / Columns);
+            var remainingRows = Math.Max(0, totalRowCount - realizedRowCount);
+            var estimatedRemainingHeight = remainingRows * (_maximumItemHeight + RowSpacing);
+
+            return Math.Max(renderedBottom, realizedBottom + estimatedRemainingHeight);
         }
         protected override Size MeasureOverride(Size availableSize)
         {
-            foreach (var i in _ElementDictionary)
+            foreach (var i in _elementDictionary)
             {
                 if (i.Value.Control is { })
                 {
@@ -321,11 +374,11 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
 
                 }
             }
-            return _PanelSize;
+            return _panelSize;
         }
         protected override Size ArrangeOverride(Size finalSize)
         {
-            foreach (var i in _ElementDictionary)
+            foreach (var i in _elementDictionary)
             {
                 if (i.Value.Control is { })
                 {
@@ -341,73 +394,32 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
             {
                 case NotifyCollectionChangedAction.Add:
                     {
-                        int _clearStartIndex = 0;
-                        if (e.NewStartingIndex < _LastIndex)
-                        {
-                            _clearStartIndex = Math.Min(e.NewStartingIndex, _CurrentIndex);
-                        }
-                        else
-                        {
-                            _clearStartIndex = _LastIndex;
-                        }
-                        for (int i = _clearStartIndex; i < Items.Count; i++)
-                        {
-                            if (_ElementDictionary.TryGetValue(i, out var _element))
-                            {
-                                if (_element.Control is { })
-                                {
-                                    RemoveInternalChild(_element.Control);
-                                    ItemContainerGenerator?.ClearItemContainer(_element.Control);
-                                    _ElementDictionary.Remove(i);
-                                }
-                            }
-
-                        }
+                        var _clearStartIndex = e.NewStartingIndex >= 0 ? e.NewStartingIndex : _currentIndex;
+                        ClearElementRange(_clearStartIndex);
                         break;
                     }
                 case NotifyCollectionChangedAction.Remove:
                     {
-                        int _clearStartIndex = 0;
-                        if (e.OldStartingIndex < _LastIndex)
-                        {
-                            _clearStartIndex = Math.Min(e.NewStartingIndex, _CurrentIndex);
-                        }
-                        else
-                        {
-                            _clearStartIndex = _LastIndex;
-                        }
-                        var _count = _ElementDictionary.Count;
-                        for (int i = _clearStartIndex; i < _count; i++)
-                        {
-                            if (_ElementDictionary.TryGetValue(i, out var _element))
-                            {
-                                if (_element.Control is { })
-                                {
-                                    RemoveInternalChild(_element.Control);
-                                    ItemContainerGenerator?.ClearItemContainer(_element.Control);
-                                    _ElementDictionary.Remove(i);
-                                }
-                            }
-
-                        }
+                        var _clearStartIndex = e.OldStartingIndex >= 0 ? e.OldStartingIndex : _currentIndex;
+                        ClearElementRange(_clearStartIndex);
+                        break;
+                    }
+                case NotifyCollectionChangedAction.Replace:
+                case NotifyCollectionChangedAction.Move:
+                    {
+                        var changedIndex = e.NewStartingIndex >= 0 ? e.NewStartingIndex : e.OldStartingIndex;
+                        var _clearStartIndex = changedIndex >= 0 ? changedIndex : _currentIndex;
+                        ClearElementRange(_clearStartIndex);
                         break;
                     }
                 case NotifyCollectionChangedAction.Reset:
                     {
-                        foreach (var i in _ElementDictionary)
-                        {
-                            if (i.Value.Control is { })
-                            {
-                                RemoveInternalChild(i.Value.Control);
-                                ItemContainerGenerator?.ClearItemContainer(i.Value.Control);
-                            }
-                        }
-                        _ElementDictionary.Clear();
+                        ClearElementRange(0);
                         break;
                     }
             }
             base.OnItemsChanged(items, e);
-            RenderElements(_CurrentIndex);
+            RenderElements(_currentIndex);
         }
 
 
@@ -419,15 +431,16 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
             if (index < 0 || index >= _items.Count || !IsEffectivelyVisible)
                 return null;
 
-            if (!_ElementDictionary.ContainsKey(index))
+            var renderStartIndex = Columns > 0 ? index - index % Columns : index;
+
+            if (!_elementDictionary.ContainsKey(index))
             {
-                OnLoadMore();
-                return null;
+                RenderElements(renderStartIndex);
             }
 
-            if (index < _ElementDictionary.Count && _ElementDictionary[index].IsRendered)
+            if (_elementDictionary.TryGetValue(index, out var renderModel) && renderModel.IsRendered)
             {
-                if (_ElementDictionary[index].Control is Control _element)
+                if (renderModel.Control is Control _element)
                 {
                     _element.BringIntoView();
                     return _element;
@@ -435,8 +448,8 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
             }
             else if (this.GetVisualRoot() is ILayoutRoot root)
             {
-                RenderElements(index);
-                if (_ElementDictionary[index].Control is Control _element)
+                RenderElements(renderStartIndex);
+                if (_elementDictionary.TryGetValue(index, out renderModel) && renderModel.Control is Control _element)
                 {
                     _element.UpdateLayout();
                     _element.BringIntoView();
@@ -447,7 +460,7 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
         }
         protected override Control? ContainerFromIndex(int index)
         {
-            if (_ElementDictionary.TryGetValue(index, out var _element))
+            if (_elementDictionary.TryGetValue(index, out var _element))
             {
                 return _element.Control;
             }
@@ -456,7 +469,7 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
 
         protected override int IndexFromContainer(Control container)
         {
-            foreach (var i in _ElementDictionary)
+            foreach (var i in _elementDictionary)
             {
                 if (i.Value.Control == container)
                 {
@@ -468,7 +481,7 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
 
         protected override IEnumerable<Control>? GetRealizedContainers()
         {
-            return _ElementDictionary.Where(_ => _.Value.Control is { }).Select(_ => _.Value.Control).OfType<Control>().ToList();
+            return _elementDictionary.Where(_ => _.Value.Control is { }).Select(_ => _.Value.Control).OfType<Control>().ToList();
         }
 
         protected override IInputElement? GetControl(NavigationDirection direction, IInputElement? from, bool wrap)
@@ -477,7 +490,7 @@ AvaloniaProperty.Register<SVirtualizingUniformGrid, double>(nameof(ColumnSpacing
             var fromControl = from as Control;
 
             if (count == 0 ||
-                (fromControl is null && direction is not NavigationDirection.First and not NavigationDirection.Last))
+                fromControl is null && direction is not NavigationDirection.First and not NavigationDirection.Last)
                 return null;
 
             var fromIndex = fromControl != null ? IndexFromContainer(fromControl) : -1;
